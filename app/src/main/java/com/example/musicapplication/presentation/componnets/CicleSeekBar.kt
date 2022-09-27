@@ -6,10 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.forEachGesture
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -53,85 +50,89 @@ fun CircleSeekBar(
     }
 
     //draw view
-    Canvas(
-        modifier = Modifier
-            .padding(end = 25.dp, start = 25.dp)
-            .offset(x = 0.dp, y = (-120).dp)
-            .fillMaxWidth()
-            .height(200.dp)
-            .moveIng(
-                radius = radiusState,
-                updatePercentage = {
-                    // update percentage state
-                    updatePercentage(it)
-                },
-                onDown = {
-                    onDownSeekBar() // when user finger is down
-                },
-                onMove = {
-                    // on move
-                },
-                onUp = {
-                    onUpSeekBar() // when user finger is up
-                },
-            ),
-        onDraw = {
-            //calculate circle radius
-            radiusState.value = size.width / 2
-            val radius = radiusState.value
+    BoxWithConstraints(modifier = Modifier) {
+        // change seek bar offset top in different screen width for space between seek bar and image card
+        val seekBarOffsetY = remember { (maxWidth * 0.37f) }
 
-            // draw background arc gray
-            drawArc(
-                alpha = alpha,
-                color = Color.LightGray,
-                startAngle = 0f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(0f, -radius),
-                size = Size(width = radius * 2,
-                    height = radius * 2),
-                style = Stroke(5.dp.toPx(), cap = StrokeCap.Round)
-            )
+        Canvas(
+            modifier = Modifier
+                .padding(end = 25.dp, start = 25.dp)
+                .offset(x = 0.dp, y = (-seekBarOffsetY))
+                .fillMaxWidth()
+                .height(200.dp)
+                .moveIng(
+                    radius = radiusState,
+                    updatePercentage = {
+                        // update percentage state
+                        updatePercentage(it)
+                    },
+                    onDown = {
+                        onDownSeekBar() // when user finger is down
+                    },
+                    onMove = {
+                        // on move
+                    },
+                    onUp = {
+                        onUpSeekBar() // when user finger is up
+                    },
+                ),
+            onDraw = {
+                //calculate circle radius
+                radiusState.value = size.width / 2
+                val radius = radiusState.value
 
-            /// draw dark gray arc
-            drawArc(
-                alpha = alpha,
-                color = Color.DarkGray,
-                startAngle = 180f,
-                sweepAngle = sweepAngle,
-                useCenter = false,
-                topLeft = Offset(0f, -radius),
-                size = Size(width = radius * 2,
-                    height = radius * 2),
-                style = Stroke(5.dp.toPx(), cap = StrokeCap.Round)
-            )
+                // draw background arc gray
+                drawArc(
+                    alpha = alpha,
+                    color = Color.LightGray,
+                    startAngle = 0f,
+                    sweepAngle = 180f,
+                    useCenter = false,
+                    topLeft = Offset(0f, -radius),
+                    size = Size(width = radius * 2,
+                        height = radius * 2),
+                    style = Stroke(5.dp.toPx(), cap = StrokeCap.Round)
+                )
 
-            // angleInDegrees
-            val angleInDegrees = (sweepAngle) + 90.0
-            // calculate dot x offset
-            val x =
-                -(radius * sin(Math.toRadians(angleInDegrees))).toFloat() + (radius)
-            // calculate dot y offset
-            val y =
-                (radius * cos(Math.toRadians(angleInDegrees))).toFloat() /// + (radius)
+                /// draw dark gray arc
+                drawArc(
+                    alpha = alpha,
+                    color = Color.DarkGray,
+                    startAngle = 180f,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    topLeft = Offset(0f, -radius),
+                    size = Size(width = radius * 2,
+                        height = radius * 2),
+                    style = Stroke(5.dp.toPx(), cap = StrokeCap.Round)
+                )
 
-            // draw dot
-            drawCircle(
-                alpha = alpha,
-                color = Color.DarkGray,
-                center = Offset(x = x, y = y),
-                radius = 25f
-            )
+                // angleInDegrees
+                val angleInDegrees = (sweepAngle) + 90.0
+                // calculate dot x offset
+                val x =
+                    -(radius * sin(Math.toRadians(angleInDegrees))).toFloat() + (radius)
+                // calculate dot y offset
+                val y =
+                    (radius * cos(Math.toRadians(angleInDegrees))).toFloat() /// + (radius)
 
-            drawCircle(
-                alpha = alpha,
-                color = Color.White,
-                center = Offset(x = x, y = y),
-                radius = 15f
-            )
+                // draw dot
+                drawCircle(
+                    alpha = alpha,
+                    color = Color.DarkGray,
+                    center = Offset(x = x, y = y),
+                    radius = 25f
+                )
 
-        },
-    )
+                drawCircle(
+                    alpha = alpha,
+                    color = Color.White,
+                    center = Offset(x = x, y = y),
+                    radius = 15f
+                )
+            },
+        )
+    }
 
 }
 
