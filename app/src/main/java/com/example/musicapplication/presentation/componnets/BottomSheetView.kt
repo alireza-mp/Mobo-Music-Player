@@ -99,12 +99,20 @@ fun BottomSheetView(
             }
             Spacer(modifier = Modifier.padding(end = 8.dp))
             // circle button
-            CircleButton(
-                percentage = viewModel.percentage,
-                isPlayIng = viewModel.musicUIState == MusicState.Play,
-                onclick = viewModel::playOrPauseMusic
-            )
+            CircleButtonContent(viewModel)
+
             Spacer(modifier = Modifier.padding(end = 8.dp))
         }
     }
+}
+
+@Composable
+private fun CircleButtonContent(
+    viewModel: HomeViewModel,
+) {
+    CircleButton(
+        percentage = viewModel.percentage,
+        isPlayIng = viewModel.musicUIState == MusicState.Play,
+        onclick = viewModel::playOrPauseMusic
+    )
 }
