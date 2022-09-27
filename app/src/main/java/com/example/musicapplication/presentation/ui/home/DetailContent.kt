@@ -43,14 +43,10 @@ fun DetailContent(viewModel: HomeViewModel) {
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {
+
         // circle seekbar
-        CircleSeekBar(
-            alpha = anim.value, // set alpha anim
-            percentageState = viewModel.percentage,
-            onUpSeekBar = viewModel::onUpSeekBar,
-            onDownSeekBar = viewModel::onDownSeekBar,
-            updatePercentage = { viewModel.updatePercentage(it) }
-        )
+        CricleSeekBarContent(anim.value, viewModel)
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -59,11 +55,10 @@ fun DetailContent(viewModel: HomeViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.padding(top = 0.dp))
+
             // music duration text
-            MultiStyleText(
-                text1 = viewModel.duration,
-                text2 = " ~ ${viewModel.currentMusicUi.duration}",
-            )
+            MultiStyleTextContent(viewModel)
+
             Spacer(modifier = Modifier.padding(top = 38.dp))
             // music title text
             Text(
@@ -103,5 +98,27 @@ fun DetailContent(viewModel: HomeViewModel) {
         onPrevious = viewModel::onPrevious,
         onAutoNext = { viewModel.onShuffle(it) },
         onLoop = { viewModel.onLoop(it) }
+    )
+}
+
+@Composable
+private fun MultiStyleTextContent(viewModel: HomeViewModel) {
+    MultiStyleText(
+        text1 = viewModel.duration,
+        text2 = " ~ ${viewModel.currentMusicUi.duration}",
+    )
+}
+
+@Composable
+private fun CricleSeekBarContent(
+    anim: Float,
+    viewModel: HomeViewModel,
+) {
+    CircleSeekBar(
+        alpha = anim, // set alpha anim
+        percentageState = viewModel.percentage,
+        onUpSeekBar = viewModel::onUpSeekBar,
+        onDownSeekBar = viewModel::onDownSeekBar,
+        updatePercentage = { viewModel.updatePercentage(it) }
     )
 }
