@@ -5,7 +5,10 @@ package com.example.musicapplication.presentation.ui.home
 import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.BottomSheetScaffoldState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -38,18 +41,13 @@ fun HomePage() {
     val viewModel: HomeViewModel = hiltViewModel()
     val storagePermission = rememberPermissionState(Manifest.permission.READ_EXTERNAL_STORAGE)
     val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Expanded)
-    )
+    val scaffoldState = rememberBottomSheetScaffoldState()
 
     // request for storage permission
-    RequestPermisision(viewModel, storagePermission)
-
-    // update screen state when scaffold changed
-    BottomSheetListener(scaffoldState, viewModel)
+    RequestPermission(viewModel, storagePermission)
 
     // handle back press
-    HandleBackPress(viewModel, coroutineScope, scaffoldState)
+    HandleBackPress(coroutineScope, scaffoldState)
 
     // main screen
     BottomSheetScaffold(
@@ -79,7 +77,7 @@ fun HomePage() {
                 )
             }
             UiState.Error -> {
-
+                // error
             }
         }
     }
@@ -111,8 +109,8 @@ fun Content(
             )
 
             // Content
-            if (viewModel.screenState.value) {
-                DetailContent(viewModel = viewModel)
+            if (scaffoldState.bottomSheetState.isCollapsed) {
+                DetailContent(viewModel = viewModel, scaffoldState)
             } else {
                 MusicListContent(viewModel = viewModel)
             }
@@ -124,7 +122,7 @@ fun Content(
 
 // launch storage permission request
 @Composable
-private fun RequestPermisision(
+private fun RequestPermission(
     viewModel: HomeViewModel,
     storagePermission: PermissionState,
 ) {
@@ -138,12 +136,12 @@ private fun RequestPermisision(
             viewModel.getAllMusics()
             viewModel.listeningPercentageStateChange()
         }
-        ObserveLifesycle(viewModel)
+        ObserveLifecycle(viewModel)
     }
 }
 
 @Composable
-private fun ObserveLifesycle(
+private fun ObserveLifecycle(
     viewModel: HomeViewModel,
 ) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -167,38 +165,19 @@ private fun ObserveLifesycle(
 
 @Composable
 private fun HandleBackPress(
-    viewModel: HomeViewModel,
     coroutineScope: CoroutineScope,
     scaffoldState: BottomSheetScaffoldState,
 ) {
-    BackHandler(enabled = viewModel.backHandler.value) {
+    BackHandler(enabled = scaffoldState.drawerState.isOpen || scaffoldState.bottomSheetState.isCollapsed) {
         coroutineScope.launch {
-            if (viewModel.screenState.value) {
+            if (scaffoldState.drawerState.isOpen) {
+                //close drawer
+                scaffoldState.drawerState.close()
+            } else {
                 // gone detail content
                 // expand bottom sheet
                 scaffoldState.bottomSheetState.expand()
-                viewModel.screenState.value = false
-            } else {
-                //close drawer
-                scaffoldState.drawerState.close()
             }
-            // disable back handler
-            viewModel.backHandler.value = false
         }
-
-    }
-}
-
-@Composable
-private fun BottomSheetListener(
-    scaffoldState: BottomSheetScaffoldState,
-    viewModel: HomeViewModel,
-) {
-    if (scaffoldState.bottomSheetState.isExpanded) {
-        viewModel.screenState.value = false
-    }
-    if (scaffoldState.bottomSheetState.isCollapsed) {
-        viewModel.backHandler.value = true
-        viewModel.screenState.value = true
     }
 }

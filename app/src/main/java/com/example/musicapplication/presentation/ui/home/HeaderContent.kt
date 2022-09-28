@@ -1,7 +1,8 @@
-@file:OptIn(ExperimentalMaterialApi::class)
-
 package com.example.musicapplication.presentation.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -21,6 +22,7 @@ import com.example.musicapplication.util.MusicState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HeaderContent(
     viewModel: HomeViewModel,
@@ -28,14 +30,14 @@ fun HeaderContent(
     scaffoldState: BottomSheetScaffoldState,
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
-        // back/menu icon
+        // back or menu icon
         IconButton(
             modifier = Modifier.padding(vertical = 12.dp),
-            onClick = { onBackOrMenuClick(viewModel, scaffoldState, coroutineScope) },
+            onClick = { onBackOrMenuClick(scaffoldState, coroutineScope) },
         ) {
             Icon(
                 painter = painterResource(
-                    id = if (viewModel.screenState.value) R.drawable.ic_back else R.drawable.ic_menu
+                    id = if (scaffoldState.bottomSheetState.isCollapsed) R.drawable.ic_back else R.drawable.ic_menu
                 ),
                 tint = DarkGray,
                 contentDescription = null,
@@ -46,8 +48,8 @@ fun HeaderContent(
                 .weight(1f)
                 .fillMaxHeight(0.5f)
         ) {
-            // rounded card
 
+            // rounded card
             Card(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -58,24 +60,46 @@ fun HeaderContent(
                 // card background image
                 FadeInImage(viewModel)
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(
-                                bottom = if (viewModel.screenState.value) 35.dp else 48.dp,
-                            ),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        // check screen state
-                        if (viewModel.screenState.value) {
-                            // show music line anim
+                // music line content animated visibility
+                this@Row.AnimatedVisibility(
+                    visible = scaffoldState.bottomSheetState.isCollapsed,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .padding(
+                                    bottom = 48.dp,
+                                ),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
                             MusicLineAnimation(
                                 isPlaying = viewModel.musicUIState == MusicState.Play
                             )
-                        } else {
-                            // show music title
+                        }
+                    }
+                }
+
+                // music title animated visibility
+                this@Row.AnimatedVisibility(
+                    visible = scaffoldState.bottomSheetState.isExpanded,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .padding(
+                                    bottom = 35.dp,
+                                ),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            // music name
                             ScrollingText(
                                 text = viewModel.currentMusicUi.title,
                                 color = LightWhite,
@@ -83,8 +107,10 @@ fun HeaderContent(
                                 style = MaterialTheme.typography.body1,
                                 textAlign = TextAlign.Center
                             )
+
                             Spacer(modifier = Modifier.padding(top = 16.dp))
-                            // show artist name
+
+                            // artist name
                             ScrollingText(
                                 text = viewModel.currentMusicUi.artist,
                                 color = LightWhite,
@@ -95,7 +121,9 @@ fun HeaderContent(
                         }
                     }
                 }
+
             }
+
         }
         // more icon
         IconButton(
@@ -112,24 +140,21 @@ fun HeaderContent(
 
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 private fun onBackOrMenuClick(
-    viewModel: HomeViewModel,
     scaffoldState: BottomSheetScaffoldState,
     coroutineScope: CoroutineScope,
 ) {
     coroutineScope.launch {
-        if (viewModel.screenState.value) {
+        if (scaffoldState.bottomSheetState.isCollapsed) {
             // detail content is visible
-            // go to list content
-            viewModel.screenState.value = false
-            viewModel.backHandler.value = false // disable back handler
+            // expand bottom sheet
             scaffoldState.bottomSheetState.expand()
         } else {
             // list content is visible
             // open drawer
             if (scaffoldState.drawerState.isClosed) {
                 scaffoldState.drawerState.open()
-                viewModel.backHandler.value = true // enable back handler for close it
             }
         }
     }

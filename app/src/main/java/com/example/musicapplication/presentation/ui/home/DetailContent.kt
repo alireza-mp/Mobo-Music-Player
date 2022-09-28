@@ -1,11 +1,10 @@
-@file:OptIn(ExperimentalMaterialApi::class)
-
 package com.example.musicapplication.presentation.ui.home
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -25,21 +24,21 @@ import com.example.musicapplication.presentation.theme.DarkGray
 import com.example.musicapplication.presentation.theme.LightGray
 import com.example.musicapplication.util.MusicState
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun DetailContent(viewModel: HomeViewModel) {
+fun DetailContent(viewModel: HomeViewModel, scaffoldState: BottomSheetScaffoldState) {
+
     // alpha animation for detail content
     val anim = remember { Animatable(initialValue = 0f) }
-    LaunchedEffect(key1 = viewModel.screenState.value) {
-        if (viewModel.screenState.value) {
-            anim.snapTo(0f)
-            anim.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = 500,
-                    easing = LinearEasing,
-                ),
-            )
-        } else anim.snapTo(1f)
+    LaunchedEffect(scaffoldState.bottomSheetState.isExpanded) {
+        anim.snapTo(0f)
+        anim.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(
+                durationMillis = 500,
+                easing = LinearEasing,
+            ),
+        )
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -60,6 +59,7 @@ fun DetailContent(viewModel: HomeViewModel) {
             MultiStyleTextContent(viewModel)
 
             Spacer(modifier = Modifier.padding(top = 38.dp))
+
             // music title text
             Text(
                 modifier = Modifier
@@ -72,7 +72,9 @@ fun DetailContent(viewModel: HomeViewModel) {
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
             )
+
             Spacer(modifier = Modifier.padding(top = 16.dp))
+
             // artist name text
             Text(
                 modifier = Modifier

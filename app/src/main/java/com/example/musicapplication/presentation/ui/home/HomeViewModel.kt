@@ -38,8 +38,6 @@ constructor(
     var musicUIState by mutableStateOf(MusicState.Complete)
     var loopState by mutableStateOf(false)
     var shuffleState by mutableStateOf(false)
-    val screenState = mutableStateOf(false)
-    val backHandler = mutableStateOf(false)
     val musicList = mutableStateListOf<Music>()
     var uiState by mutableStateOf(UiState.Loading)
         private set
