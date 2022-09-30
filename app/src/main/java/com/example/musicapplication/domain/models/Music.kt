@@ -11,6 +11,7 @@ data class Music(
     val path: String = "null",
     var duration: String = "null",
     val imageUri: Uri? = null,
+    val musicUri: String? = null,
     val isPlayed: Boolean = false,
 )
 
@@ -20,7 +21,8 @@ suspend fun mapToDomainModel(model: audioContent): Music {
         artist = model.artist,
         title = model.title,
         path = model.filePath,
-        duration = convertMilliSecondsToSecond(model.duration.toInt()),
+        duration = convertMilliSecondsToSecond(model.duration),
+        musicUri = model.assetFileStringUri,
         imageUri = model.art_uri
     )
 }

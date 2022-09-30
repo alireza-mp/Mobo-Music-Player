@@ -5,28 +5,27 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 
-suspend fun convertMilliSecondsToSecond(duration: Int): String {
-    return withContext(Dispatchers.IO) {
-        String.format("%d:%02d",
-            TimeUnit.MILLISECONDS.toMinutes(duration.toLong()),
-            TimeUnit.MILLISECONDS.toSeconds(duration.toLong()) -
-                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration.toLong()))
-        )
-    }
+fun convertMilliSecondsToSecond(currentPosition: Long): String {
+    return String.format("%d:%02d",
+        TimeUnit.MILLISECONDS.toMinutes(currentPosition),
+        TimeUnit.MILLISECONDS.toSeconds(currentPosition) -
+                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition))
+    )
 }
 
-suspend fun convertPercentageToSecond(duration: Int, percentage: Float): String {
+suspend fun convertPercentageToSecond(duration: Long, percentage: Float): String {
     return withContext(Dispatchers.IO) {
-        convertMilliSecondsToSecond(((duration / 100f) * percentage).toInt())
+        convertMilliSecondsToSecond(((duration / 100f) * percentage).toLong())
     }
+
 }
 
-suspend fun convertDurationToPercentage(duration: Int, currentPosition: Int): Float {
+suspend fun convertPositionToPercentage(duration: Long, currentPosition: Long): Float {
     return withContext(Dispatchers.IO) {
         currentPosition / (duration / 100f)
     }
 }
 
-fun convertPercentageToMilliSeconds(duration: Int, percentage: Float): Int {
-    return ((duration / 100f) * percentage).toInt()
+fun convertPercentageToMilliSeconds(duration: Long, percentage: Float): Long {
+    return ((duration / 100f) * percentage).toLong()
 }

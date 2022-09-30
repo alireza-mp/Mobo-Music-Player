@@ -8,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.CodeBoy.MediaFacer.AudioGet
 import com.CodeBoy.MediaFacer.MediaFacer
 import com.example.musicapplication.device.player.MusicPlayer
+import com.google.android.exoplayer2.ExoPlayer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,6 +35,12 @@ object AppModule {
     @Singleton
     fun provideMusicPlayer(): MusicPlayer {
         return MusicPlayer()
+    }
+
+    @Provides
+    @Singleton
+    fun provideExoPlayer(app: Application): ExoPlayer {
+        return ExoPlayer.Builder(app).build()
     }
 
 }

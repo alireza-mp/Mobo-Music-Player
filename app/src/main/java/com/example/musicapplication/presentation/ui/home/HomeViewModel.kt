@@ -1,8 +1,15 @@
 package com.example.musicapplication.presentation.ui.home
 
+import android.app.Application
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.musicapplication.device.player.MediaPlayerService
 import com.example.musicapplication.device.player.MusicPlayer
 import com.example.musicapplication.device.player.MusicPlayerUiListener
 import com.example.musicapplication.domain.models.LastDataStore
@@ -27,13 +34,8 @@ constructor(
     private val homeViewUseCase: GetHomeViewStateUseCase,
     private val saveLastMusicUseCase: SaveLastMusicDataUseCase,
     private val musicPlayer: MusicPlayer,
+    private val app: Application,
 ) : ViewModel() {
-
-    init {
-        musicPlayerUiListener()
-        setMusicPlayerDurationListener()
-        setMusicPlayerPercentageListener()
-    }
 
     var musicUIState by mutableStateOf(MusicState.Complete)
     var loopState by mutableStateOf(false)
@@ -48,6 +50,8 @@ constructor(
     var percentage by mutableStateOf(0f)
         private set
 
+    private lateinit var lastData: LastDataStore
+
 
     // get all music list
     fun getAllMusics() {
@@ -60,7 +64,9 @@ constructor(
                     is DataState.Success -> {
                         musicList.addAll(result.data.musicList)
                         // update music player data
-                        initialMusicPlayerData(result.data.lastDataStore, result.data.musicList)
+                        lastData = result.data.lastDataStore
+                        inLastPAndD()
+                        getService()
                         UiState.Success
                     }
                     is DataState.Error -> {
@@ -72,13 +78,12 @@ constructor(
     }
 
 
-    private fun initialMusicPlayerData(data: LastDataStore, musicList: List<Music>) {
-        // set last music details from datastore && set music list
-        musicPlayer.initialData(musicList, data.lastMusicIndex, data.percentage)
+    private fun inLastPAndD() {
+
         // update duration state
-        duration = data.duration
+        duration = lastData.duration
         // update percentage state
-        percentage = data.percentage
+        percentage = lastData.percentage
     }
 
     // on music item clicked
@@ -211,4 +216,43 @@ constructor(
             }.launchIn(viewModelScope)
         }
     }
+
+
+    /*************************************************/
+
+
+    override fun onCleared() {
+        super.onCleared()
+        app.unbindService(serviceConnection)
+    }
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
+            val binder: MediaPlayerService.ServiceBinder = p1 as MediaPlayerService.ServiceBinder
+            val exoPlayer = binder.getMediaPlayerService().exoPlayer
+            musicPlayer.initialData(
+                exoPlayer,
+                musicList,
+                lastData.lastMusicIndex,
+                lastData.percentage
+            )
+            musicPlayerUiListener()
+            setMusicPlayerDurationListener()
+            setMusicPlayerPercentageListener()
+            app.startService(Intent(app, MediaPlayerService::class.java))
+
+        }
+
+        override fun onServiceDisconnected(p0: ComponentName?) {
+
+        }
+
+    }
+
+    private fun getService() {
+        val intent = Intent(app, MediaPlayerService::class.java)
+        app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    }
+
+
 }
