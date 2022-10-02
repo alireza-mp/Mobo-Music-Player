@@ -153,6 +153,21 @@ class MediaPlayerService : Service() {
 
     }
 
+    private fun initialPlayerListener() {
+        exoPlayer.addListener(object : Player.Listener {
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
+                serviceMediaListener?.onIsPlayingChanged(isPlaying)
+            }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                super.onMediaItemTransition(mediaItem, reason)
+                serviceMediaListener?.onMediaItemTransition(mediaItem)
+            }
+
+        })
+    }
 
     override fun onDestroy() {
         //if (exoPlayer.isPlaying) exoPlayer.stop()

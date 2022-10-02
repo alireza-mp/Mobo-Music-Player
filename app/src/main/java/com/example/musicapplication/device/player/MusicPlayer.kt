@@ -1,11 +1,11 @@
 package com.example.musicapplication.device.player
 
-import android.util.Log
+import com.example.musicapplication.domain.models.LastDataStore
 import com.example.musicapplication.domain.models.Music
-import com.example.musicapplication.util.MusicState
 import com.example.musicapplication.util.convertMilliSecondsToSecond
 import com.example.musicapplication.util.convertPercentageToMilliSeconds
 import com.example.musicapplication.util.convertPositionToPercentage
+import com.example.musicapplication.util.convertPositionToPercentageNotSuspend
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -18,64 +18,90 @@ import kotlinx.coroutines.flow.flowOn
 class MusicPlayer {
 
     // auto go to next music state
-    private var autoNext = false
+    //private var autoNext = false
 
-    //for set last music percentage
-    private var lastPercentage = -1f
-
-    private var musicState = MusicState.Complete
-    private var currentMusicIndex = 0
-    private lateinit var musicList: List<Music>
-    private lateinit var currentMusic: Music
     private lateinit var exoPlayer: ExoPlayer
     private var uiListener: MusicPlayerUiListener? = null
+    val serviceMediaListener: ServiceMediaListener = object : ServiceMediaListener {
 
-
-    fun initialData(exoPlayer: ExoPlayer, list: List<Music>, lastMusicIndex: Int, lastP: Float) {
-        musicList = list
-        this.exoPlayer = exoPlayer
-        lastPercentage = lastP
-        // update current music with last music
-        if (musicList.isNotEmpty()) {
-            //currentMusic = musicList[lastMusicIndex]
-            // currentMusicIndex = lastMusicIndex
-            //uiListener?.updateCurrentMusic(currentMusic)
-            this.exoPlayer.addMediaItems(musicToMediaList(musicList))
-            this.exoPlayer.addListener(object : Player.Listener {
-
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    super.onIsPlayingChanged(isPlaying)
-                    if (isPlaying) {
-                        uiListener?.play()
-                        musicState = MusicState.Play
-                    } else {
-                        musicState = MusicState.Pause
-                        uiListener?.pause()
-                    }
-                }
-
-                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                    super.onMediaItemTransition(mediaItem, reason)
-                    //exoPlayer.prepare()
-                    uiListener?.updateCurrentMusic(mediaItemToMusic(mediaItem))
-                }
-
-                override fun onPlaybackStateChanged(state: Int) {
-                    if (state == Player.STATE_ENDED) {
-                        Log.i("my log", "onPlaybackStateChanged: ended")
-                    }
-                }
-            })
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            if (isPlaying) {
+                uiListener?.play()
+            } else {
+                uiListener?.pause()
+            }
         }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?) {
+            uiListener?.updateCurrentMusic(mediaItemToMusic(mediaItem))
+        }
+
+    }
+
+    fun initialData(
+        exoPlayer: ExoPlayer,
+        musicList: List<Music>,
+        lastData: LastDataStore,
+        musicPlayerUiListener: MusicPlayerUiListener,
+    ) {
+
+        this.exoPlayer = exoPlayer
+        this.uiListener = musicPlayerUiListener
+
+        if (musicList.isNotEmpty()) {
+            // check media player in service is exist or not
+            if (exoPlayer.mediaItemCount == 0) { // if media player PlayList is empty
+
+                setMediaPlayerData(musicList, lastData)
+
+            } else { // media player playList not empty
+
+                // update ui with media player state
+                updateUiWithPlayerState()
+            }
+        }
+    }
+
+    private fun setMediaPlayerData(musicList: List<Music>, lastData: LastDataStore) {
+        // add music list ot media player playList
+        exoPlayer.addMediaItems(musicToMediaList(musicList))
+
+        // update media player with last music in dataStore
+        if (lastData.lastMusicIndex != -1) {
+            exoPlayer.seekTo(lastData.lastMusicIndex, lastData.currentPosition)
+            // update ui duration and percentage
+            uiListener?.updatePAndD(
+                percentage = convertPositionToPercentageNotSuspend(
+                    duration = lastData.duration,
+                    currentPosition = lastData.currentPosition,
+                ),
+                duration = convertMilliSecondsToSecond(lastData.currentPosition)
+            )
+        }
+    }
+
+    private fun updateUiWithPlayerState() {
+        if (exoPlayer.isPlaying) {
+            uiListener?.play()
+        } else {
+            uiListener?.pause()
+        }
+        uiListener?.updateCurrentMusic(mediaItemToMusic(exoPlayer.currentMediaItem))
+        uiListener?.updatePAndD(
+            percentage = convertPositionToPercentageNotSuspend(
+                duration = exoPlayer.duration,
+                currentPosition = exoPlayer.currentPosition,
+            ),
+            duration = convertMilliSecondsToSecond(exoPlayer.currentPosition)
+        )
     }
 
     // play current music && update ui and state
     fun play() {
-
-        exoPlayer.prepare()
-        exoPlayer.play()
-
-        //checkLastPercentage()
+        if (!exoPlayer.isPlaying) {
+            exoPlayer.prepare()
+            exoPlayer.play()
+        }
     }
 
     // pause current music && update ui and state
@@ -85,14 +111,6 @@ class MusicPlayer {
         }
     }
 
-    // set music player on complete listener
-    private fun onComplete() {
-        /*mediaPlayer.setOnCompletionListener {
-            // remove current music
-
-        }*/
-    }
-
     // enable loop mode
     fun setLoop(enabled: Boolean) {
         exoPlayer.repeatMode = if (enabled)
@@ -100,14 +118,6 @@ class MusicPlayer {
         else
             Player.REPEAT_MODE_ALL
 
-    }
-
-    // check last percentage state
-    private fun checkLastPercentage() {
-        if (lastPercentage != -1f) {
-            seekTo(lastPercentage)
-            removeLastPercentage()
-        }
     }
 
     // music play seekTo by percentage
@@ -146,27 +156,16 @@ class MusicPlayer {
 
     fun getDuration(): Long = exoPlayer.duration
 
-    fun setUiListener(MusicPlayerUiListener: MusicPlayerUiListener) {
-        this.uiListener = MusicPlayerUiListener
-    }
-
     fun playOrPauseMusic() {
-        when (musicState) {
-            MusicState.Play -> {
-                pause()
-            }
-            MusicState.Pause -> {
-                play()
-            }
-            MusicState.Complete -> {
-                // if completed play again
-                play()
-            }
+        if (exoPlayer.isPlaying) {
+            pause()
+        } else {
+            play()
         }
     }
 
     fun updateAutoNext(state: Boolean) {
-        autoNext = state
+        //autoNext = state
     }
 
 
@@ -198,9 +197,4 @@ class MusicPlayer {
         }
     }
 
-
-    // disable last percentage state
-    private fun removeLastPercentage() {
-        lastPercentage = -1f
-    }
 }

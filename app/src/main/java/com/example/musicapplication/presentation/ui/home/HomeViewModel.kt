@@ -37,7 +37,7 @@ constructor(
     private val app: Application,
 ) : ViewModel() {
 
-    var musicUIState by mutableStateOf(MusicState.Complete)
+    var musicUIState by mutableStateOf(MusicState.Pause)
     var loopState by mutableStateOf(false)
     var shuffleState by mutableStateOf(false)
     val musicList = mutableStateListOf<Music>()
@@ -168,36 +168,19 @@ constructor(
         musicPlayer.setLoop(state)
     }
 
-    // listening to music player ui change
-    private fun musicPlayerUiListener() {
-
-        musicPlayer.setUiListener(object : MusicPlayerUiListener {
-
-            override fun play() {
-                musicUIState = MusicState.Play
+    // listening to percentage change for update duration when user change seek bar and player is pause
+    fun listeningPercentageStateChange() {
+        viewModelScope.launch {
+            snapshotFlow { percentage }.collect { percentage ->
+                if (musicUIState == MusicState.Pause && musicPlayer.getDuration() >= 0) {
+                    // update duration when percentage change in seekbar
+                    duration = convertPercentageToSecond(musicPlayer.getDuration(), percentage)
+                }
             }
-
-            override fun pause() {
-                musicUIState = MusicState.Pause
-            }
-
-            override fun onComplete() {
-                musicUIState = MusicState.Complete
-                percentage = 0f
-                duration = "0:00"
-            }
-
-            override fun updateCurrentMusic(music: Music) {
-                currentMusicUi = music
-            }
-
-            override fun updateAutoNext(state: Boolean) {
-                shuffleState = state
-            }
-        })
+        }
     }
 
-    // update duration state from music player
+    // update duration state from music player every 150 millisecond
     private fun setMusicPlayerDurationListener() {
         viewModelScope.launch(Dispatchers.IO) {
             musicPlayer.getDurationFlow().onEach {
@@ -207,7 +190,7 @@ constructor(
         }
     }
 
-    // update percentage state from music player
+    // update percentage state from music player every 150 millisecond
     private fun setMusicPlayerPercentageListener() {
         viewModelScope.launch(Dispatchers.IO) {
             musicPlayer.getPercentageFlow().onEach {
@@ -217,13 +200,31 @@ constructor(
         }
     }
 
+    // update ui with music player changes listener
+    private fun initialMusicPlayerUIListener(): MusicPlayerUiListener {
+        return object : MusicPlayerUiListener {
 
-    /*************************************************/
+            override fun play() {
+                musicUIState = MusicState.Play
+            }
 
+            override fun pause() {
+                musicUIState = MusicState.Pause
+            }
 
-    override fun onCleared() {
-        super.onCleared()
-        app.unbindService(serviceConnection)
+            override fun updatePAndD(percentage: Float, duration: String) {
+                this@HomeViewModel.percentage = percentage
+                this@HomeViewModel.duration = duration
+            }
+
+            override fun updateCurrentMusic(music: Music) {
+                currentMusicUi = music
+            }
+
+            override fun updateAutoNext(state: Boolean) {
+                shuffleState = state
+            }
+        }
     }
 
     private val serviceConnection = object : ServiceConnection {
