@@ -30,7 +30,20 @@ class MediaPlayerService : Service() {
     lateinit var exoPlayer: ExoPlayer
 
 
+    var serviceMediaListener: ServiceMediaListener? = null
+    var viewExistListener = object : ViewExistListener {
+        override fun onViewExist(isExist: Boolean) {
+            isViewExist = isExist
+        }
+    }
+    private var isViewExist = false
+    private val chanelId = "Music Chanel"
+    private val notificationId = 1111111
+    private lateinit var mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter
+    private lateinit var notificationListener: PlayerNotificationManager.NotificationListener
     private val serviceBinder: IBinder = ServiceBinder()
+    private var playerNotificationManager: PlayerNotificationManager? = null
+
 
     inner class ServiceBinder : Binder() {
         fun getMediaPlayerService(): MediaPlayerService {
@@ -100,32 +113,42 @@ class MediaPlayerService : Service() {
                   *//*biti ?: ContextCompat.getDrawable(applicationContext,
                 R.drawable.ic_launcher_background)*//*
 
-            return biti.bitmap*/
+    private fun initialNotificationListener() {
+        notificationListener = object : PlayerNotificationManager.NotificationListener {
 
-                /*val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    ImageDecoder.decodeBitmap(ImageDecoder.createSource(requireContext().contentResolver, imageUri))
+
+            override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
+                super.onNotificationCancelled(notificationId, dismissedByUser)
+
+                // remove notification
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
                 } else {
-                    MediaStore.Images.Media.getBitmap(requireContext().contentResolver, imageUri)
-                }*/
-
-                return null
+                    stopForeground(true)
+                }
+                stopSelf()
             }
-
-        }
-    }
-
-    private fun crateListen(): PlayerNotificationManager.NotificationListener {
-        return object : PlayerNotificationManager.NotificationListener {
 
             override fun onNotificationPosted(
                 notificationId: Int,
                 notification: Notification,
                 ongoing: Boolean,
             ) {
-                super.onNotificationPosted(notificationId, notification, ongoing)
-                startForeground(notificationId, notification)
-            }
 
+                if (ongoing) {
+                    startForeground(notificationId, notification)
+                } else {
+                    // if view is not exist stop foreground
+                    if (!isViewExist) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_DETACH)
+                        } else {
+                            stopForeground(false)
+                        }
+                    }
+                }
+
+            }
         }
     }
 

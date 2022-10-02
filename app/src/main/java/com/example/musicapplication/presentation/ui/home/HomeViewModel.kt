@@ -12,10 +12,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.musicapplication.device.player.MediaPlayerService
 import com.example.musicapplication.device.player.MusicPlayer
 import com.example.musicapplication.device.player.MusicPlayerUiListener
+import com.example.musicapplication.device.player.ViewExistListener
 import com.example.musicapplication.domain.models.LastDataStore
 import com.example.musicapplication.domain.models.Music
 import com.example.musicapplication.domain.useCase.GetHomeViewStateUseCase
-import com.example.musicapplication.domain.useCase.SaveLastMusicDataUseCase
 import com.example.musicapplication.util.DataState
 import com.example.musicapplication.util.MusicState
 import com.example.musicapplication.util.UiState
@@ -32,7 +32,6 @@ class HomeViewModel
 @Inject
 constructor(
     private val homeViewUseCase: GetHomeViewStateUseCase,
-    private val saveLastMusicUseCase: SaveLastMusicDataUseCase,
     private val musicPlayer: MusicPlayer,
     private val app: Application,
 ) : ViewModel() {
@@ -49,8 +48,8 @@ constructor(
         private set
     var percentage by mutableStateOf(0f)
         private set
-
-    private lateinit var lastData: LastDataStore
+    private var viewExistListener: ViewExistListener? = null
+    private lateinit var serviceConnection: ServiceConnection
 
 
     // get all music list
@@ -64,9 +63,7 @@ constructor(
                     is DataState.Success -> {
                         musicList.addAll(result.data.musicList)
                         // update music player data
-                        lastData = result.data.lastDataStore
-                        inLastPAndD()
-                        getService()
+                        getService(result.data.lastDataStore)
                         UiState.Success
                     }
                     is DataState.Error -> {
@@ -77,30 +74,13 @@ constructor(
         }
     }
 
-
-    private fun inLastPAndD() {
-
-        // update duration state
-        duration = lastData.duration
-        // update percentage state
-        percentage = lastData.percentage
+    fun updateViewExistListener() {
+        viewExistListener?.onViewExist(false)
     }
 
     // on music item clicked
     fun onItemClick(music: Music, index: Int) {
         musicPlayer.onItemClick(music, index)
-    }
-
-    // listening for percentage changing
-    fun listeningPercentageStateChange() {
-        viewModelScope.launch {
-            snapshotFlow { percentage }.collect { percentage ->
-                if (musicUIState == MusicState.Pause) {
-                    // update duration when percentage change in seekbar
-                    duration = convertPercentageToSecond(musicPlayer.getDuration(), percentage)
-                }
-            }
-        }
     }
 
     // user finger up from seek bar
@@ -121,23 +101,8 @@ constructor(
 
     // play or pause music
     fun playOrPauseMusic() {
+        app.startService(Intent(app, MediaPlayerService::class.java))
         musicPlayer.playOrPauseMusic()
-    }
-
-    //save last music details to data store
-    fun saveLastMusic() {
-        viewModelScope.launch {
-            if (musicUIState == MusicState.Play) { // if music is playing pause it
-                musicPlayer.pause()
-            }
-            saveLastMusicUseCase.invoke(
-                duration = duration,
-                isLoop = loopState,
-                isShuffle = shuffleState,
-                percentage = percentage,
-                musicTitle = currentMusicUi.title,
-            )
-        }
     }
 
     // update percentage state
@@ -160,7 +125,6 @@ constructor(
         shuffleState = state
         musicPlayer.updateAutoNext(state)
     }
-
 
     // enable music player looping
     fun onLoop(state: Boolean) {
@@ -227,33 +191,47 @@ constructor(
         }
     }
 
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
-            val binder: MediaPlayerService.ServiceBinder = p1 as MediaPlayerService.ServiceBinder
-            val exoPlayer = binder.getMediaPlayerService().exoPlayer
-            musicPlayer.initialData(
-                exoPlayer,
-                musicList,
-                lastData.lastMusicIndex,
-                lastData.percentage
-            )
-            musicPlayerUiListener()
-            setMusicPlayerDurationListener()
-            setMusicPlayerPercentageListener()
-            app.startService(Intent(app, MediaPlayerService::class.java))
+    // service connection
+    private fun initialServiceConnection(lastDataStore: LastDataStore): ServiceConnection {
+        return object : ServiceConnection {
+            override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
 
+                val binder: MediaPlayerService.ServiceBinder =
+                    p1 as MediaPlayerService.ServiceBinder
+                val service = binder.getMediaPlayerService()
+                // set service media player listener from music player
+                service.serviceMediaListener = musicPlayer.serviceMediaListener
+                // set view exist listener from service
+                viewExistListener = service.viewExistListener
+                // set view exist true
+                viewExistListener?.onViewExist(true)
+                // initial music player data
+                musicPlayer.initialData(
+                    exoPlayer = service.exoPlayer,
+                    musicList = musicList,
+                    lastData = lastDataStore,
+                    musicPlayerUiListener = initialMusicPlayerUIListener() // set music player ui listener
+                )
+                setMusicPlayerDurationListener()
+                setMusicPlayerPercentageListener()
+                listeningPercentageStateChange()
+            }
+
+            override fun onServiceDisconnected(p0: ComponentName?) {
+                // service disconnected
+            }
         }
-
-        override fun onServiceDisconnected(p0: ComponentName?) {
-
-        }
-
     }
 
-    private fun getService() {
+    private fun getService(lastDataStore: LastDataStore) {
+        serviceConnection = initialServiceConnection(lastDataStore)
         val intent = Intent(app, MediaPlayerService::class.java)
         app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        app.unbindService(serviceConnection)
+    }
 
 }

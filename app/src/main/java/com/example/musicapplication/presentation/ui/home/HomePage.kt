@@ -134,7 +134,6 @@ private fun RequestPermission(
         LaunchedEffect(Unit) {
             // get all musics
             viewModel.getAllMusics()
-            viewModel.listeningPercentageStateChange()
         }
         ObserveLifecycle(viewModel)
     }
@@ -147,11 +146,11 @@ private fun ObserveLifecycle(
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(LocalView.current) {
 
-        // observer for save last music when app is stop
+        // observer for update service when app destroy
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_STOP -> {
-                    viewModel.saveLastMusic()
+                Lifecycle.Event.ON_DESTROY -> {
+                    viewModel.updateViewExistListener()
                 }
                 else -> {}
             }
