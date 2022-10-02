@@ -220,6 +220,7 @@ class MediaPlayerService : Service() {
     override fun onDestroy() {
         if (exoPlayer.isPlaying) exoPlayer.stop()
         // save last music info
+        saveData()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
@@ -229,7 +230,7 @@ class MediaPlayerService : Service() {
 
     }
 
-    // save last music ingo into datastore
+    // save last music ingo into datastore when service is destroy
     private fun saveData() {
         val job = SupervisorJob()
         val scope = CoroutineScope(Dispatchers.Main + job)
