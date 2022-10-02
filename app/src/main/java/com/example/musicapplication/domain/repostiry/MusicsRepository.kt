@@ -14,10 +14,10 @@ interface MusicsRepository {
     suspend fun getLastDataStore(): Flow<DataState<LastDataStore>>
 
     suspend fun saveData(
-        duration: String,
+        duration: Long,
+        currentPosition: Long,
         isLoop: Boolean,
         isShuffle: Boolean,
-        percentage: Float,
         musicTitle: String,
     )
 

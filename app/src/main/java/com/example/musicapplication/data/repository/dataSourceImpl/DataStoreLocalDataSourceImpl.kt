@@ -17,11 +17,11 @@ constructor(
     override suspend fun getLastMusicTitle(): String =
         dataStore.data.first()[PreferencesKeys.musicTitleKey] ?: "/+/"
 
-    override suspend fun getLastMusicDuration(): String =
-        dataStore.data.first()[PreferencesKeys.musicDurationKey] ?: "0:00"
+    override suspend fun getLastMusicDuration(): Long =
+        dataStore.data.first()[PreferencesKeys.musicDurationKey]?.toLong() ?: 0
 
-    override suspend fun getLastMusicPercentage(): Float =
-        dataStore.data.first()[PreferencesKeys.musicPercentageKey]?.toFloat() ?: 0.0f
+    override suspend fun getLastMusicCurrentPosition(): Long =
+        dataStore.data.first()[PreferencesKeys.musicCurrentPosition]?.toLong() ?: 0
 
     override suspend fun getIsShuffle(): Boolean =
         dataStore.data.first()[PreferencesKeys.isShuffleKey]?.toBoolean() ?: false
@@ -30,16 +30,16 @@ constructor(
         dataStore.data.first()[PreferencesKeys.isLoopKey]?.toBoolean() ?: false
 
     override suspend fun saveData(
-        duration: String,
+        duration: Long,
+        currentPosition: Long,
         isLoop: Boolean,
         isShuffle: Boolean,
-        percentage: Float,
         musicTitle: String,
     ) {
         dataStore.edit {
-            it[PreferencesKeys.musicDurationKey] = duration
+            it[PreferencesKeys.musicDurationKey] = duration.toString()
+            it[PreferencesKeys.musicCurrentPosition] = currentPosition.toString()
             it[PreferencesKeys.musicTitleKey] = musicTitle
-            it[PreferencesKeys.musicPercentageKey] = percentage.toString()
             it[PreferencesKeys.isLoopKey] = isLoop.toString()
             it[PreferencesKeys.isShuffleKey] = isShuffle.toString()
         }

@@ -21,7 +21,7 @@ class MusicsLocalDataSourceImpl
         val result = audioGet.searchMusic(dataStoreLocalDataSource.getLastMusicTitle())
         // if founded
         return if (result.size != 0) {
-            var index = 0
+            var index = -1
             // found music index in list
             val list = audioGet.getAllAudioContent(AudioGet.externalContentUri)
             for (i in 0 until list.size) {
@@ -31,7 +31,7 @@ class MusicsLocalDataSourceImpl
                 }
             }
             index
-        } else 0 // not founded  // set as default index 0
+        } else -1 // not founded  // set as default index 0
     }
 
 }

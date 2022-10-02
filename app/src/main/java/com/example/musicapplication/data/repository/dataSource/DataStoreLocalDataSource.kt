@@ -4,19 +4,19 @@ interface DataStoreLocalDataSource {
 
     suspend fun getLastMusicTitle(): String
 
-    suspend fun getLastMusicDuration(): String
+    suspend fun getLastMusicDuration(): Long
 
-    suspend fun getLastMusicPercentage(): Float
+    suspend fun getLastMusicCurrentPosition(): Long
 
     suspend fun getIsShuffle(): Boolean
 
     suspend fun getIsLoop(): Boolean
 
     suspend fun saveData(
-        duration: String,
+        duration: Long,
+        currentPosition: Long,
         isLoop: Boolean,
         isShuffle: Boolean,
-        percentage: Float,
         musicTitle: String,
     )
 

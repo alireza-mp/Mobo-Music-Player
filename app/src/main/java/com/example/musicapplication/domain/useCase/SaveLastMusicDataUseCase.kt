@@ -10,11 +10,11 @@ constructor(
 ) {
 
     suspend operator fun invoke(
-        duration: String,
+        duration: Long,
+        currentPosition: Long,
         isLoop: Boolean,
         isShuffle: Boolean,
-        percentage: Float,
         musicTitle: String,
-    ) = musicsRepository.saveData(duration, isLoop, isShuffle, percentage, musicTitle)
+    ) = musicsRepository.saveData(duration, currentPosition, isLoop, isShuffle, musicTitle)
 
 }

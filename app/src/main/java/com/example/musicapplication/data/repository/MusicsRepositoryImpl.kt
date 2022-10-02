@@ -33,7 +33,7 @@ constructor(
         emit(DataState.Loading)
         val lastDataStore = LastDataStore(
             duration = dataStoreLocalDataSource.getLastMusicDuration(),
-            percentage = dataStoreLocalDataSource.getLastMusicPercentage(),
+            currentPosition = dataStoreLocalDataSource.getLastMusicCurrentPosition(),
             lastMusicIndex = musicsLocalDataSource.getLastMusicIndex(),
             isShuffle = dataStoreLocalDataSource.getIsShuffle(),
             isLoop = dataStoreLocalDataSource.getIsLoop(),
@@ -42,12 +42,12 @@ constructor(
     }
 
     override suspend fun saveData(
-        duration: String,
+        duration: Long,
+        currentPosition: Long,
         isLoop: Boolean,
         isShuffle: Boolean,
-        percentage: Float,
         musicTitle: String,
     ) {
-        dataStoreLocalDataSource.saveData(duration, isLoop, isShuffle, percentage, musicTitle)
+        dataStoreLocalDataSource.saveData(duration, currentPosition, isLoop, isShuffle, musicTitle)
     }
 }
