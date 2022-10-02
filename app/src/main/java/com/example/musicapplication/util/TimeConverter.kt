@@ -26,6 +26,10 @@ suspend fun convertPositionToPercentage(duration: Long, currentPosition: Long): 
     }
 }
 
+fun convertPositionToPercentageNotSuspend(duration: Long, currentPosition: Long): Float {
+    return currentPosition / (duration / 100f)
+}
+
 fun convertPercentageToMilliSeconds(duration: Long, percentage: Float): Long {
     return ((duration / 100f) * percentage).toLong()
 }

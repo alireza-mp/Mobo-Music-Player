@@ -6,18 +6,28 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
+import android.provider.MediaStore
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.core.app.NotificationCompat
 import com.example.musicapplication.R
+import com.example.musicapplication.domain.useCase.SaveLastMusicDataUseCase
 import com.example.musicapplication.presentation.ui.mainactivity.MainActivity
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -25,10 +35,11 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MediaPlayerService : Service() {
 
-
     @Inject
     lateinit var exoPlayer: ExoPlayer
 
+    @Inject
+    lateinit var saveLastMusicDataUseCase: SaveLastMusicDataUseCase
 
     var serviceMediaListener: ServiceMediaListener? = null
     var viewExistListener = object : ViewExistListener {
@@ -55,63 +66,80 @@ class MediaPlayerService : Service() {
         return serviceBinder
     }
 
-
-    val chanelId = "Music Chanel"
-    val notificationId = 1111111
-    private lateinit var mediaDescription: PlayerNotificationManager.MediaDescriptionAdapter
-    private lateinit var notificationListner: PlayerNotificationManager.NotificationListener
-    var playerNotificationManager: PlayerNotificationManager? = null
-
     override fun onCreate() {
         super.onCreate()
+        // initial media description adapter and notification listener
+        initialMediaDescription()
+        initialNotificationListener()
 
-        mediaDescription = createMedaiDesc()
-        notificationListner = crateListen()
+        setPlayerAudioAttributes()
+        initialPlayerNotificationManager()
+        initialPlayerListener()
+    }
 
-        // ss
+    private fun setPlayerAudioAttributes() {
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .build()
-
         exoPlayer.setAudioAttributes(audioAttributes, true)
         exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
-
-        createPNotif()
-
-
     }
 
+    private fun initialMediaDescription() {
+        mediaDescriptionAdapter = object : PlayerNotificationManager.MediaDescriptionAdapter {
 
-    private fun createMedaiDesc(): PlayerNotificationManager.MediaDescriptionAdapter {
-        return object : PlayerNotificationManager.MediaDescriptionAdapter {
+            //set notification title
             override fun getCurrentContentTitle(player: Player): CharSequence {
                 return player.currentMediaItem?.mediaMetadata?.title ?: "null"
             }
 
+            // set notification onClicked intent
             override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                // intentn to open app
+                // intent to open app
                 val intent = Intent(this@MediaPlayerService, MainActivity::class.java)
 
-                return PendingIntent.getActivity(applicationContext,
-                    0,
-                    intent,
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+                return PendingIntent.getActivity(
+                    /* context = */ applicationContext,
+                    /* requestCode = */ 0,
+                    /* intent = */ intent,
+                    /* flags = */ PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
             }
 
+            // set notification description
             override fun getCurrentContentText(player: Player): CharSequence {
-                return "hihihi"
+                return player.currentMediaItem?.mediaMetadata?.artist ?: ""
             }
 
+            // set notification image
             override fun getCurrentLargeIcon(
                 player: Player,
                 callback: PlayerNotificationManager.BitmapCallback,
             ): Bitmap? {
-                /*  val view = ImageView(applicationContext)
-                  view.setImageURI(player.currentMediaItem?.mediaMetadata?.artworkUri)
-                  val biti: BitmapDrawable = view.drawable as BitmapDrawable
-                  *//*biti ?: ContextCompat.getDrawable(applicationContext,
-                R.drawable.ic_launcher_background)*//*
+
+                val uri = player.currentMediaItem?.mediaMetadata?.artworkUri
+                return if (uri == null) {
+                    BitmapFactory.decodeResource(
+                        applicationContext.resources,
+                        R.drawable.default_image
+                    )
+                } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        ImageDecoder.decodeBitmap(ImageDecoder.createSource(
+                            applicationContext.contentResolver,
+                            uri
+                        ))
+                    } else {
+                        MediaStore.Images.Media.getBitmap(
+                            applicationContext.contentResolver,
+                            uri
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     private fun initialNotificationListener() {
         notificationListener = object : PlayerNotificationManager.NotificationListener {
@@ -152,22 +180,19 @@ class MediaPlayerService : Service() {
         }
     }
 
-
-    private fun createPNotif() {
-
+    private fun initialPlayerNotificationManager() {
         playerNotificationManager =
             PlayerNotificationManager.Builder(applicationContext, notificationId, chanelId)
-                .setNotificationListener(notificationListner)
-                .setMediaDescriptionAdapter(mediaDescription)
+                .setNotificationListener(notificationListener)
+                .setMediaDescriptionAdapter(mediaDescriptionAdapter)
                 .setChannelImportance(NotificationManager.IMPORTANCE_HIGH)
                 .setSmallIconResourceId(R.drawable.ic_launcher_foreground)
-                .setNextActionIconResourceId(R.drawable.ic_launcher_foreground)
-                .setPreviousActionIconResourceId(R.drawable.ic_launcher_foreground)
-                .setPlayActionIconResourceId(R.drawable.ic_launcher_foreground)
-                .setPauseActionIconResourceId(R.drawable.ic_launcher_foreground)
+                .setNextActionIconResourceId(R.drawable.ic_notification_next)
+                .setPreviousActionIconResourceId(R.drawable.ic_notification_previous)
+                .setPlayActionIconResourceId(R.drawable.ic_play)
+                .setPauseActionIconResourceId(R.drawable.ic_pause)
                 .setChannelNameResourceId(R.string.app_name)
                 .build()
-
 
         playerNotificationManager?.setPlayer(exoPlayer)
         playerNotificationManager?.setPriority(NotificationCompat.PRIORITY_MAX)
@@ -193,18 +218,32 @@ class MediaPlayerService : Service() {
     }
 
     override fun onDestroy() {
-        //if (exoPlayer.isPlaying) exoPlayer.stop()
-        playerNotificationManager?.setPlayer(null)
-        exoPlayer.release()
-        // player = null
-        //stopForeground(true)
-        stopSelf()
+        if (exoPlayer.isPlaying) exoPlayer.stop()
+        // save last music info
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            stopForeground(true)
+        }
         super.onDestroy()
+
     }
 
-
+    // save last music ingo into datastore
+    private fun saveData() {
+        val job = SupervisorJob()
+        val scope = CoroutineScope(Dispatchers.Main + job)
+        scope.launch {
+            saveLastMusicDataUseCase.invoke(
+                duration = exoPlayer.duration,
+                currentPosition = exoPlayer.currentPosition,
+                isLoop = false,
+                isShuffle = false,
+                musicTitle = exoPlayer.currentMediaItem?.mediaMetadata?.title?.toString() ?: "/*/"
+            )
+            job.cancel()
+        }
+    }
 }
-
-
 
 
