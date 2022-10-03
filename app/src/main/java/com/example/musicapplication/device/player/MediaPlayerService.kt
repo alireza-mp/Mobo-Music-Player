@@ -188,7 +188,7 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
                 .setNotificationListener(notificationListener)
                 .setMediaDescriptionAdapter(mediaDescriptionAdapter)
                 .setChannelImportance(NotificationManager.IMPORTANCE_HIGH)
-                .setSmallIconResourceId(R.drawable.ic_launcher_foreground)
+                .setSmallIconResourceId(R.drawable.ic_logo)
                 .setNextActionIconResourceId(R.drawable.ic_notification_next)
                 .setPreviousActionIconResourceId(R.drawable.ic_notification_previous)
                 .setPlayActionIconResourceId(R.drawable.ic_play)
