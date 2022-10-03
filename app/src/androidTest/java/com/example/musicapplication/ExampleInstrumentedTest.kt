@@ -1,4 +1,4 @@
-package com.example.musicapplication
+package com.digimoplus.moboplayer
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

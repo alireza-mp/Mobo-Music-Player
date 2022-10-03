@@ -1,4 +1,4 @@
-package com.example.musicapplication
+package com.digimoplus.moboplayer
 
 import org.junit.Test
 
