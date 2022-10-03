@@ -33,7 +33,7 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalMaterialApi::class)
 @AndroidEntryPoint
-class MediaPlayerService : Service() {
+class MediaPlayerService : Service(), ServiceUiChangeListener {
 
     @Inject
     lateinit var exoPlayer: ExoPlayer
@@ -42,11 +42,6 @@ class MediaPlayerService : Service() {
     lateinit var saveLastMusicDataUseCase: SaveLastMusicDataUseCase
 
     var serviceMediaListener: ServiceMediaListener? = null
-    var viewExistListener = object : ViewExistListener {
-        override fun onViewExist(isExist: Boolean) {
-            isViewExist = isExist
-        }
-    }
     private var isViewExist = false
     private val chanelId = "Music Chanel"
     private val notificationId = 1111111
@@ -86,6 +81,11 @@ class MediaPlayerService : Service() {
 
         if (exoPlayer.repeatMode == Player.REPEAT_MODE_OFF)
             exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+    }
+
+    // view exist listener
+    override fun onViewExist(isExist: Boolean) {
+        isViewExist = isExist
     }
 
     private fun initialMediaDescription() {

@@ -1,5 +1,5 @@
 package com.example.musicapplication.device.player
 
-interface ViewExistListener {
+interface ServiceUiChangeListener {
     fun onViewExist(isExist: Boolean)
 }

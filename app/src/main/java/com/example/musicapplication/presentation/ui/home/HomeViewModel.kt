@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.musicapplication.device.player.MediaPlayerService
 import com.example.musicapplication.device.player.MusicPlayer
 import com.example.musicapplication.device.player.MusicPlayerUiListener
-import com.example.musicapplication.device.player.ViewExistListener
+import com.example.musicapplication.device.player.ServiceUiChangeListener
 import com.example.musicapplication.domain.models.LastDataStore
 import com.example.musicapplication.domain.models.Music
 import com.example.musicapplication.domain.useCase.GetHomeViewStateUseCase
@@ -47,7 +47,7 @@ constructor(
         private set
     var percentage by mutableStateOf(0f)
         private set
-    private var viewExistListener: ViewExistListener? = null
+    private var serviceUiChangeListener: ServiceUiChangeListener? = null
     private lateinit var serviceConnection: ServiceConnection
 
 
@@ -74,7 +74,7 @@ constructor(
     }
 
     fun updateViewExistListener() {
-        viewExistListener?.onViewExist(false)
+        serviceUiChangeListener?.onViewExist(false)
     }
 
     // on music item clicked
@@ -213,9 +213,9 @@ constructor(
                 // set service media player listener from music player
                 service.serviceMediaListener = musicPlayer
                 // set view exist listener from service
-                viewExistListener = service.viewExistListener
+                serviceUiChangeListener = service
                 // set view exist true
-                viewExistListener?.onViewExist(true)
+                serviceUiChangeListener?.onViewExist(true)
                 // initial music player data
                 musicPlayer.initialData(
                     exoPlayer = service.exoPlayer,
