@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.dp
+import com.digimoplus.moboplayer.presentation.componnets.util.toPx
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -29,6 +30,12 @@ fun MusicLineAnimation(
         val animYThree = remember { Animatable(0f) }
         val animYFour = remember { Animatable(0f) }
         val animFive = remember { Animatable(0f) }
+        // lines height
+        val targetValueOne = 115.dp.toPx()
+        val targetValueTwo = 100.dp.toPx()
+        val targetValueThree = 90.dp.toPx()
+        val targetValueFour = 60.dp.toPx()
+        val targetValueFive = 40.dp.toPx()
 
 
         // check is playing
@@ -37,7 +44,7 @@ fun MusicLineAnimation(
             LaunchedEffect(animYOne) {
                 launch {
                     animYOne.animateTo(
-                        250f,
+                        targetValueOne,
                         animationSpec = infiniteRepeatable( // repeatable animation
                             animation = tween(
                                 durationMillis = 600,
@@ -52,7 +59,7 @@ fun MusicLineAnimation(
             LaunchedEffect(animYTwo) {
                 delay(300)
                 animYTwo.animateTo(
-                    220f,
+                    targetValueTwo,
                     animationSpec = infiniteRepeatable( // repeatable animation
                         animation = tween(
                             durationMillis = 600,
@@ -66,7 +73,7 @@ fun MusicLineAnimation(
             LaunchedEffect(animYThree) {
                 delay(180)
                 animYThree.animateTo(
-                    200f,
+                    targetValueThree,
                     animationSpec = infiniteRepeatable( // repeatable animation
                         animation = tween(
                             durationMillis = 500,
@@ -80,7 +87,7 @@ fun MusicLineAnimation(
             LaunchedEffect(animYFour) {
                 delay(300)
                 animYFour.animateTo(
-                    140f,
+                    targetValueFour,
                     animationSpec = infiniteRepeatable( // repeatable animation
                         animation = tween(
                             durationMillis = 400,
@@ -94,7 +101,7 @@ fun MusicLineAnimation(
             LaunchedEffect(animFive) {
                 delay(650)
                 animFive.animateTo(
-                    100f,
+                    targetValueFive,
                     animationSpec = infiniteRepeatable( // repeatable animation
                         animation = tween(
                             durationMillis = 400,
@@ -115,17 +122,19 @@ fun MusicLineAnimation(
             }
         }
 
+        // lines width
+        val lineWidth = 10.dp.toPx()
+        val spaceBetweenLine = 22.dp.toPx()
+        val spaceBetweenLines = spaceBetweenLine * 9
 
         Canvas(modifier = Modifier
             .fillMaxSize()) {
             // padding for right and left
-            val padding = (size.width - 500f) / 2f
+            val padding = (size.width - spaceBetweenLines) / 2f
             // center Y offset
             val centerY = size.height / 2f
             // lines corner radius
             val cornerRadius = CornerRadius(50f, 50f)
-            // lines width
-            val lineWidth = 25f
             // color top lines
             val colorTop = Color(0xFFFFFFFF)
             // color bottom lines
@@ -168,7 +177,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 50f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 1), centerY),
                                 size = Size(lineWidth, animYTwo.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -183,7 +192,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 50f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 1), centerY),
                                 size = Size(lineWidth, -animYTwo.value),
                             ),
                             topLeft = cornerRadius,
@@ -198,7 +207,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 100f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 2), centerY),
                                 size = Size(lineWidth, animYOne.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -213,7 +222,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 100f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 2), centerY),
                                 size = Size(lineWidth, -animYOne.value),
                             ),
                             topLeft = cornerRadius,
@@ -228,7 +237,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 150f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 3), centerY),
                                 size = Size(lineWidth, animFive.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -243,7 +252,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 150f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 3), centerY),
                                 size = Size(lineWidth, -animFive.value),
                             ),
                             topLeft = cornerRadius,
@@ -258,7 +267,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 200f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 4), centerY),
                                 size = Size(lineWidth, animYFour.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -273,7 +282,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 200f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 4), centerY),
                                 size = Size(lineWidth, -animYFour.value),
                             ),
                             topLeft = cornerRadius,
@@ -288,7 +297,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 250f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 5), centerY),
                                 size = Size(lineWidth, animFive.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -303,7 +312,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 250f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 5), centerY),
                                 size = Size(lineWidth, -animFive.value),
                             ),
                             topLeft = cornerRadius,
@@ -318,7 +327,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 300f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 6), centerY),
                                 size = Size(lineWidth, animYFour.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -333,7 +342,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 300f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 6), centerY),
                                 size = Size(lineWidth, -animYFour.value),
                             ),
                             topLeft = cornerRadius,
@@ -348,7 +357,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 350f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 7), centerY),
                                 size = Size(lineWidth, animYTwo.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -363,7 +372,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 350f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 7), centerY),
                                 size = Size(lineWidth, -animYTwo.value),
                             ),
                             topLeft = cornerRadius,
@@ -378,7 +387,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 400f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 8), centerY),
                                 size = Size(lineWidth, animYOne.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -393,7 +402,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 400f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 8), centerY),
                                 size = Size(lineWidth, -animYOne.value),
                             ),
                             topLeft = cornerRadius,
@@ -408,7 +417,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 450f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 9), centerY),
                                 size = Size(lineWidth, animYFour.value),
                             ),
                             bottomLeft = cornerRadius,
@@ -423,7 +432,7 @@ fun MusicLineAnimation(
                     addRoundRect(
                         RoundRect(
                             rect = Rect(
-                                offset = Offset(padding + 450f, centerY),
+                                offset = Offset(padding + (spaceBetweenLine * 9), centerY),
                                 size = Size(lineWidth, -animYFour.value),
                             ),
                             topLeft = cornerRadius,
@@ -433,7 +442,6 @@ fun MusicLineAnimation(
                 },
                 color = colorTop,
             )//10
-
 
         }
     }

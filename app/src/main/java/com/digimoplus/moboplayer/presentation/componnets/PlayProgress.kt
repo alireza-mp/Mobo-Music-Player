@@ -15,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.digimoplus.moboplayer.presentation.componnets.util.toPx
 import kotlinx.coroutines.launch
 
 
@@ -23,10 +25,13 @@ import kotlinx.coroutines.launch
 fun LineProgress(
     size: Int, // size
     duration: Int, // duration
-    strokeWidth: Float, //lines widths
-    spaceBetween: Float, //Spacing between lines
+    strokeWidthDp: Dp, //lines widths
+    spaceBetweenDp: Dp, //Spacing between lines
     color: Color, // lines color
 ) {
+
+    val strokeWidth = strokeWidthDp.toPx()
+    val spaceBetween = spaceBetweenDp.toPx()
 
     Box(modifier = Modifier.size(size.dp)) {
         // animatable for animate lines Offset y

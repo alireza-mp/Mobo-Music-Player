@@ -121,14 +121,14 @@ fun CircleSeekBar(
                     alpha = alpha,
                     color = Color.DarkGray,
                     center = Offset(x = x, y = y),
-                    radius = 25f
+                    radius = 10.dp.toPx()
                 )
 
                 drawCircle(
                     alpha = alpha,
                     color = Color.White,
                     center = Offset(x = x, y = y),
-                    radius = 15f
+                    radius = 6.dp.toPx()
                 )
             },
         )

@@ -86,8 +86,8 @@ fun MusicItem(
                 LineProgress(
                     size = 10,
                     duration = 200,
-                    strokeWidth = 5f,
-                    spaceBetween = 10f,
+                    strokeWidthDp = 2.dp,
+                    spaceBetweenDp = 4.dp,
                     color = DarkGray
                 )
             }
