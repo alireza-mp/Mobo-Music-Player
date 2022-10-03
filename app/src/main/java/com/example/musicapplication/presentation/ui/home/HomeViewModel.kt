@@ -17,7 +17,10 @@ import com.example.musicapplication.domain.models.LastDataStore
 import com.example.musicapplication.domain.models.Music
 import com.example.musicapplication.domain.useCase.GetHomeViewStateUseCase
 import com.example.musicapplication.domain.useCase.SavePlayListUseCase
-import com.example.musicapplication.util.*
+import com.example.musicapplication.util.DataState
+import com.example.musicapplication.util.MusicState
+import com.example.musicapplication.util.UiState
+import com.example.musicapplication.util.convertPercentageToSecond
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -55,18 +58,18 @@ constructor(
     fun getAllMusics() {
         viewModelScope.launch(Dispatchers.IO) {
             homeViewUseCase().onEach { result ->
-                uiState = when (result) {
+                when (result) {
                     is DataState.Loading -> {
-                        UiState.Loading
+                        uiState = UiState.Loading
                     }
                     is DataState.Success -> {
                         musicList.addAll(result.data.musicList)
-                        // update music player data
+                        // update player data
+                        // call ui success in service connection
                         getService(result.data.lastDataStore)
-                        UiState.Success
                     }
                     is DataState.Error -> {
-                        UiState.Error
+                        uiState = UiState.Error
                     }
                 }
             }.launchIn(viewModelScope)
@@ -129,7 +132,7 @@ constructor(
     }
 
     // enable music player shuffle auto next
-    fun onPlayListChange(isShuffle:Boolean) {
+    fun onPlayListChange(isShuffle: Boolean) {
         shuffleState = isShuffle
         musicPlayer.setShuffle(isShuffle)
     }
@@ -226,6 +229,8 @@ constructor(
                 setMusicPlayerDurationListener()
                 setMusicPlayerPercentageListener()
                 listeningPercentageStateChange()
+                // update ui state
+                uiState = UiState.Success
             }
 
             override fun onServiceDisconnected(p0: ComponentName?) {
@@ -235,6 +240,7 @@ constructor(
     }
 
     private fun getService(lastDataStore: LastDataStore) {
+        // uiState success call in service connection
         serviceConnection = initialServiceConnection(lastDataStore)
         val intent = Intent(app, MediaPlayerService::class.java)
         app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)

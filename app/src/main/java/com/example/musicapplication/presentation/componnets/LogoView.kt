@@ -11,21 +11,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.ehsanmsz.mszprogressindicator.progressindicator.BallPulseProgressIndicator
 import com.example.musicapplication.R
-import com.example.musicapplication.presentation.theme.DarkGray
-import com.example.musicapplication.presentation.theme.LightWhite
 
 @Composable
-fun BallProgressView() {
+fun LogoView() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = LightWhite),
+            .background(color = Color(0xFF000000)),
         contentAlignment = Alignment.Center,
     ) {
-        BallPulseProgressIndicator(
-            color = DarkGray
+        Image(
+            modifier = Modifier.size(300.dp),
+            painter = painterResource(R.drawable.logo),
+            contentDescription = null
         )
     }
 }

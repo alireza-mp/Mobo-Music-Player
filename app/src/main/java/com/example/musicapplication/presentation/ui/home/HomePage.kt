@@ -24,6 +24,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.example.musicapplication.presentation.componnets.BallProgressView
 import com.example.musicapplication.presentation.componnets.BottomSheetView
 import com.example.musicapplication.presentation.componnets.DrawerContent
+import com.example.musicapplication.presentation.componnets.LogoView
 import com.example.musicapplication.presentation.theme.LightWhite
 import com.example.musicapplication.presentation.theme.White
 import com.example.musicapplication.util.UiState
@@ -66,7 +67,7 @@ fun HomePage() {
         // update ui
         when (viewModel.uiState) {
             UiState.Loading -> {
-                BallProgressView()
+                LogoView()
             }
             UiState.Success -> {
                 Content(
