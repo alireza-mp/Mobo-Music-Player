@@ -27,19 +27,22 @@ constructor(
         dataStore.data.first()[PreferencesKeys.isShuffleKey]?.toBoolean() ?: false
 
     override suspend fun getIsLoop(): Boolean =
-        dataStore.data.first()[PreferencesKeys.isLoopKey]?.toBoolean() ?: false
+       dataStore.data.first()[PreferencesKeys.isLoopKey]?.toBoolean() ?: false
 
-    override suspend fun saveData(
+    override suspend fun saveLastMusicData(
         duration: Long,
         currentPosition: Long,
-        isLoop: Boolean,
-        isShuffle: Boolean,
         musicTitle: String,
     ) {
         dataStore.edit {
             it[PreferencesKeys.musicDurationKey] = duration.toString()
             it[PreferencesKeys.musicCurrentPosition] = currentPosition.toString()
             it[PreferencesKeys.musicTitleKey] = musicTitle
+        }
+    }
+
+    override suspend fun savePlayListData(isLoop: Boolean, isShuffle: Boolean) {
+        dataStore.edit {
             it[PreferencesKeys.isLoopKey] = isLoop.toString()
             it[PreferencesKeys.isShuffleKey] = isShuffle.toString()
         }

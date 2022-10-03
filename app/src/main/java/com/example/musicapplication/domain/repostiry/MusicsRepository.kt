@@ -13,12 +13,15 @@ interface MusicsRepository {
     //search for last music and return index in music list
     suspend fun getLastDataStore(): Flow<DataState<LastDataStore>>
 
-    suspend fun saveData(
+    suspend fun saveLastMusicData(
         duration: Long,
         currentPosition: Long,
-        isLoop: Boolean,
-        isShuffle: Boolean,
         musicTitle: String,
+    )
+
+    suspend fun savePlayListData(
+        isLoop:Boolean,
+        isShuffle:Boolean,
     )
 
 }

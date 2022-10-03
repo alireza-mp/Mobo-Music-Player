@@ -16,10 +16,8 @@ import com.example.musicapplication.device.player.ViewExistListener
 import com.example.musicapplication.domain.models.LastDataStore
 import com.example.musicapplication.domain.models.Music
 import com.example.musicapplication.domain.useCase.GetHomeViewStateUseCase
-import com.example.musicapplication.util.DataState
-import com.example.musicapplication.util.MusicState
-import com.example.musicapplication.util.UiState
-import com.example.musicapplication.util.convertPercentageToSecond
+import com.example.musicapplication.domain.useCase.SavePlayListUseCase
+import com.example.musicapplication.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -32,6 +30,7 @@ class HomeViewModel
 @Inject
 constructor(
     private val homeViewUseCase: GetHomeViewStateUseCase,
+    private val savePlayListUseCase: SavePlayListUseCase,
     private val musicPlayer: MusicPlayer,
     private val app: Application,
 ) : ViewModel() {
@@ -83,6 +82,15 @@ constructor(
         musicPlayer.onItemClick(music, index)
     }
 
+    fun savePlayListState() {
+        viewModelScope.launch {
+            savePlayListUseCase.invoke(
+                isLoop = loopState,
+                isShuffle = shuffleState,
+            )
+        }
+    }
+
     // user finger up from seek bar
     fun onUpSeekBar() {
         viewModelScope.launch {
@@ -121,9 +129,9 @@ constructor(
     }
 
     // enable music player shuffle auto next
-    fun onShuffle(state: Boolean) {
-        shuffleState = state
-        musicPlayer.updateAutoNext(state)
+    fun onPlayListChange(isShuffle:Boolean) {
+        shuffleState = isShuffle
+        musicPlayer.setShuffle(isShuffle)
     }
 
     // enable music player looping

@@ -149,6 +149,9 @@ private fun ObserveLifecycle(
         // observer for update service when app destroy
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.savePlayListState()
+                }
                 Lifecycle.Event.ON_DESTROY -> {
                     viewModel.updateViewExistListener()
                 }

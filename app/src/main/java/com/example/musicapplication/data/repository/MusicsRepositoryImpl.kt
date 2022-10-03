@@ -41,13 +41,16 @@ constructor(
         emit(DataState.Success(lastDataStore))
     }
 
-    override suspend fun saveData(
+    override suspend fun saveLastMusicData(
         duration: Long,
         currentPosition: Long,
-        isLoop: Boolean,
-        isShuffle: Boolean,
-        musicTitle: String,
+        musicTitle: String
     ) {
-        dataStoreLocalDataSource.saveData(duration, currentPosition, isLoop, isShuffle, musicTitle)
+        dataStoreLocalDataSource.saveLastMusicData(duration, currentPosition,musicTitle)
     }
+
+    override suspend fun savePlayListData(isLoop: Boolean, isShuffle: Boolean) {
+        dataStoreLocalDataSource.savePlayListData(isLoop, isShuffle)
+    }
+
 }

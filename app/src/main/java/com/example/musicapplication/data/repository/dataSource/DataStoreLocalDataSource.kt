@@ -12,12 +12,14 @@ interface DataStoreLocalDataSource {
 
     suspend fun getIsLoop(): Boolean
 
-    suspend fun saveData(
+    suspend fun saveLastMusicData(
         duration: Long,
         currentPosition: Long,
-        isLoop: Boolean,
-        isShuffle: Boolean,
         musicTitle: String,
     )
 
+    suspend fun savePlayListData(
+        isLoop: Boolean,
+        isShuffle: Boolean,
+    )
 }

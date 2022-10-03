@@ -15,27 +15,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 
-class MusicPlayer {
+class MusicPlayer : ServiceMediaListener {
 
     // auto go to next music state
-    //private var autoNext = false
-
     private lateinit var exoPlayer: ExoPlayer
     private var uiListener: MusicPlayerUiListener? = null
-    val serviceMediaListener: ServiceMediaListener = object : ServiceMediaListener {
 
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (isPlaying) {
-                uiListener?.play()
-            } else {
-                uiListener?.pause()
-            }
+
+    //serviceMediaListener
+    override fun onIsPlayingChanged(isPlaying: Boolean) {
+        if (isPlaying) {
+            uiListener?.play()
+        } else {
+            uiListener?.pause()
         }
+    }
 
-        override fun onMediaItemTransition(mediaItem: MediaItem?) {
-            uiListener?.updateCurrentMusic(mediaItemToMusic(mediaItem))
-        }
-
+    override fun onMediaItemTransition(mediaItem: MediaItem?) {
+        uiListener?.updateCurrentMusic(mediaItemToMusic(mediaItem))
     }
 
     fun initialData(
@@ -44,7 +41,6 @@ class MusicPlayer {
         lastData: LastDataStore,
         musicPlayerUiListener: MusicPlayerUiListener,
     ) {
-
         this.exoPlayer = exoPlayer
         this.uiListener = musicPlayerUiListener
 
@@ -70,14 +66,18 @@ class MusicPlayer {
         if (lastData.lastMusicIndex != -1) {
             exoPlayer.seekTo(lastData.lastMusicIndex, lastData.currentPosition)
             // update ui duration and percentage
-            uiListener?.updatePAndD(
+            uiListener?.updateUiByPlayerState(
                 percentage = convertPositionToPercentageNotSuspend(
                     duration = lastData.duration,
                     currentPosition = lastData.currentPosition,
                 ),
-                duration = convertMilliSecondsToSecond(lastData.currentPosition)
+                duration = convertMilliSecondsToSecond(lastData.currentPosition),
+                isLoop = lastData.isLoop,
+                isShuffle = lastData.isShuffle,
             )
         }
+        setShuffle(lastData.isShuffle)
+        setLoop(lastData.isLoop)
     }
 
     private fun updateUiWithPlayerState() {
@@ -86,14 +86,16 @@ class MusicPlayer {
         } else {
             uiListener?.pause()
         }
-        uiListener?.updateCurrentMusic(mediaItemToMusic(exoPlayer.currentMediaItem))
-        uiListener?.updatePAndD(
+        uiListener?.updateUiByPlayerState(
             percentage = convertPositionToPercentageNotSuspend(
                 duration = exoPlayer.duration,
                 currentPosition = exoPlayer.currentPosition,
             ),
-            duration = convertMilliSecondsToSecond(exoPlayer.currentPosition)
+            duration = convertMilliSecondsToSecond(exoPlayer.currentPosition),
+            isLoop = exoPlayer.repeatMode == Player.REPEAT_MODE_ONE,
+            isShuffle = exoPlayer.shuffleModeEnabled,
         )
+        uiListener?.updateCurrentMusic(mediaItemToMusic(exoPlayer.currentMediaItem))
     }
 
     // play current music && update ui and state
@@ -113,11 +115,15 @@ class MusicPlayer {
 
     // enable loop mode
     fun setLoop(enabled: Boolean) {
-        exoPlayer.repeatMode = if (enabled)
-            Player.REPEAT_MODE_ONE
+        if (enabled)
+            exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
         else
-            Player.REPEAT_MODE_ALL
+            exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+    }
 
+
+    fun setShuffle(enabled: Boolean) {
+        exoPlayer.shuffleModeEnabled = enabled
     }
 
     // music play seekTo by percentage
@@ -164,11 +170,6 @@ class MusicPlayer {
         }
     }
 
-    fun updateAutoNext(state: Boolean) {
-        //autoNext = state
-    }
-
-
     // go to next music
     fun onNext() {
         if (exoPlayer.hasNextMediaItem()) {
@@ -185,7 +186,7 @@ class MusicPlayer {
 
 
     // on music item clicked
-    fun onItemClick(music: Music, index: Int) {
+    fun onItemClick(index: Int) {
         // check if current music is clicked or not
         if (exoPlayer.currentMediaItemIndex != index) {
             exoPlayer.seekTo(index, 0)
