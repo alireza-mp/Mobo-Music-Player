@@ -5,7 +5,12 @@ import com.example.musicapplication.domain.models.Music
 interface MusicPlayerUiListener {
     fun play()
     fun pause()
-    fun updatePAndD(percentage: Float, duration: String)
+    fun updateUiByPlayerState(
+        percentage: Float,
+        duration: String,
+        isLoop: Boolean,
+        isShuffle: Boolean,
+    )
+
     fun updateCurrentMusic(music: Music)
-    fun updateAutoNext(state: Boolean)
 }

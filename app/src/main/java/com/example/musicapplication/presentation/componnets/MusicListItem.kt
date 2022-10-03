@@ -31,7 +31,7 @@ fun MusicItem(
     animation: Boolean,
     isPlayIng: Boolean,
     enabled: Boolean,
-    onItemClick: (music: Music) -> Unit,
+    onItemClick: () -> Unit,
 ) {
     // check current music color
     val color = if (enabled) DarkGray else LightGray
@@ -45,14 +45,14 @@ fun MusicItem(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }, // This is mandatory
                 onClick = {
-                    onItemClick(model)
+                    onItemClick()
                 }
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
             onClick = {
-                onItemClick(model)
+                onItemClick()
             },
         ) {
             Icon(

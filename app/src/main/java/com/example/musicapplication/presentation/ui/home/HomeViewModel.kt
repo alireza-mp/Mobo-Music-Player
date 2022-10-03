@@ -78,8 +78,8 @@ constructor(
     }
 
     // on music item clicked
-    fun onItemClick(music: Music, index: Int) {
-        musicPlayer.onItemClick(music, index)
+    fun onItemClick(index: Int) {
+        musicPlayer.onItemClick(index)
     }
 
     fun savePlayListState() {
@@ -184,17 +184,20 @@ constructor(
                 musicUIState = MusicState.Pause
             }
 
-            override fun updatePAndD(percentage: Float, duration: String) {
+            override fun updateUiByPlayerState(
+                percentage: Float,
+                duration: String,
+                isLoop: Boolean,
+                isShuffle: Boolean,
+            ) {
+                loopState = isLoop
+                shuffleState = isShuffle
                 this@HomeViewModel.percentage = percentage
                 this@HomeViewModel.duration = duration
             }
 
             override fun updateCurrentMusic(music: Music) {
                 currentMusicUi = music
-            }
-
-            override fun updateAutoNext(state: Boolean) {
-                shuffleState = state
             }
         }
     }
@@ -208,7 +211,7 @@ constructor(
                     p1 as MediaPlayerService.ServiceBinder
                 val service = binder.getMediaPlayerService()
                 // set service media player listener from music player
-                service.serviceMediaListener = musicPlayer.serviceMediaListener
+                service.serviceMediaListener = musicPlayer
                 // set view exist listener from service
                 viewExistListener = service.viewExistListener
                 // set view exist true
@@ -218,7 +221,7 @@ constructor(
                     exoPlayer = service.exoPlayer,
                     musicList = musicList,
                     lastData = lastDataStore,
-                    musicPlayerUiListener = initialMusicPlayerUIListener() // set music player ui listener
+                    musicPlayerUiListener = initialMusicPlayerUIListener(), // set music player ui listener
                 )
                 setMusicPlayerDurationListener()
                 setMusicPlayerPercentageListener()

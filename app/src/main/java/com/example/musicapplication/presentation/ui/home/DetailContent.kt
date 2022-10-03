@@ -93,12 +93,12 @@ fun DetailContent(viewModel: HomeViewModel, scaffoldState: BottomSheetScaffoldSt
     ControllerButtons(
         isPlayIng = viewModel.musicUIState == MusicState.Play,
         alpha = anim.value, // set alpha anim
-        autoNextState = viewModel.shuffleState,
+        shuffleState = viewModel.shuffleState,
         loopState = viewModel.loopState,
         onPlayPauseClick = viewModel::playOrPauseMusic,
         onNext = viewModel::onNext,
         onPrevious = viewModel::onPrevious,
-        onAutoNext = { viewModel.onShuffle(it) },
+        onShuffle = { viewModel.onPlayListChange(it) },
         onLoop = { viewModel.onLoop(it) }
     )
 }

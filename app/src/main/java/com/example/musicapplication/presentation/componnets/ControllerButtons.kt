@@ -27,13 +27,13 @@ import com.example.musicapplication.presentation.theme.LightGray
 fun ControllerButtons(
     isPlayIng: Boolean,
     alpha: Float,
-    autoNextState: Boolean,
+    shuffleState: Boolean,
     loopState: Boolean,
     onPlayPauseClick: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     onLoop: (Boolean) -> Unit,
-    onAutoNext: (Boolean) -> Unit,
+    onShuffle: (Boolean) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -47,16 +47,12 @@ fun ControllerButtons(
             IconButton(
                 onClick = {
                     // update auto next state
-                    onAutoNext(!autoNextState)
-                    // disable loop state
-                    if (loopState) {
-                        onLoop(false)
-                    }
+                    onShuffle(!shuffleState)
                 },
             ) {
                 Icon(
                     modifier = Modifier.size(24.dp),
-                    tint = if (autoNextState) DarkGray else LightGray,
+                    tint = if (shuffleState) DarkGray else LightGray,
                     painter = painterResource(id = R.drawable.ic_shuffle),
                     contentDescription = null,
                 )
@@ -126,10 +122,6 @@ fun ControllerButtons(
                 onClick = {
                     // update loop state
                     onLoop(!loopState)
-                    // disable auto next state
-                    if (autoNextState) {
-                        onAutoNext(false)
-                    }
                 },
             ) {
                 Icon(

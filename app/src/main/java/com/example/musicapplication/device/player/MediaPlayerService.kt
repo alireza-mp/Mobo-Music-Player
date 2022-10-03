@@ -83,7 +83,9 @@ class MediaPlayerService : Service() {
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .build()
         exoPlayer.setAudioAttributes(audioAttributes, true)
-        exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+
+        if (exoPlayer.repeatMode == Player.REPEAT_MODE_OFF)
+            exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
     }
 
     private fun initialMediaDescription() {
@@ -238,8 +240,6 @@ class MediaPlayerService : Service() {
             saveLastMusicDataUseCase.invoke(
                 duration = exoPlayer.duration,
                 currentPosition = exoPlayer.currentPosition,
-                isLoop = false,
-                isShuffle = false,
                 musicTitle = exoPlayer.currentMediaItem?.mediaMetadata?.title?.toString() ?: "/*/"
             )
             job.cancel()

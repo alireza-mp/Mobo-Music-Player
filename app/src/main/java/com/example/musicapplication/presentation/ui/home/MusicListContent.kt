@@ -38,7 +38,7 @@ fun MusicListContent(viewModel: HomeViewModel) {
                 animation = animation.value,
                 isPlayIng = viewModel.musicUIState == MusicState.Play && viewModel.currentMusicUi.id == model.id, // check music is palying
                 enabled = viewModel.currentMusicUi.id == model.id,
-                onItemClick = { music -> viewModel.onItemClick(music, index) }
+                onItemClick = { viewModel.onItemClick(index) }
             )
 
         }
