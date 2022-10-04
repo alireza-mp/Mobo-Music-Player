@@ -122,20 +122,29 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
 
                 val uri = player.currentMediaItem?.mediaMetadata?.artworkUri
                 return if (uri == null) {
+                    // set default image
                     BitmapFactory.decodeResource(
                         applicationContext.resources,
                         R.drawable.default_image
                     )
                 } else {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        ImageDecoder.decodeBitmap(ImageDecoder.createSource(
-                            applicationContext.contentResolver,
-                            uri
-                        ))
-                    } else {
-                        MediaStore.Images.Media.getBitmap(
-                            applicationContext.contentResolver,
-                            uri
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            ImageDecoder.decodeBitmap(ImageDecoder.createSource(
+                                applicationContext.contentResolver,
+                                uri
+                            ))
+                        } else {
+                            MediaStore.Images.Media.getBitmap(
+                                applicationContext.contentResolver,
+                                uri
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // set default image
+                        BitmapFactory.decodeResource(
+                            applicationContext.resources,
+                            R.drawable.default_image
                         )
                     }
                 }
