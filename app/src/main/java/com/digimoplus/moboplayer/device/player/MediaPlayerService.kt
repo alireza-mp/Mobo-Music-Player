@@ -7,16 +7,16 @@ import android.app.Service
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.ImageDecoder
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
-import android.provider.MediaStore
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.core.app.NotificationCompat
 import com.digimoplus.moboplayer.R
 import com.digimoplus.moboplayer.domain.useCase.SaveLastMusicDataUseCase
 import com.digimoplus.moboplayer.presentation.ui.mainactivity.MainActivity
+import com.digimoplus.moboplayer.util.Constans
+import com.digimoplus.moboplayer.util.stopForeground
+import com.digimoplus.moboplayer.util.toBitmap
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -24,10 +24,7 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import javax.inject.Inject
 
 
@@ -49,6 +46,7 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
     private lateinit var notificationListener: PlayerNotificationManager.NotificationListener
     private val serviceBinder: IBinder = ServiceBinder()
     private var playerNotificationManager: PlayerNotificationManager? = null
+    private var removeNotificationJob: Job? = null
 
 
     inner class ServiceBinder : Binder() {
@@ -66,7 +64,6 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
         // initial media description adapter and notification listener
         initialMediaDescription()
         initialNotificationListener()
-
         setPlayerAudioAttributes()
         initialPlayerNotificationManager()
         initialPlayerListener()
@@ -86,6 +83,7 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
     // view exist listener
     override fun onViewExist(isExist: Boolean) {
         isViewExist = isExist
+        removeNotification(exoPlayer.isPlaying, isExist)
     }
 
     private fun initialMediaDescription() {
@@ -119,7 +117,6 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
                 player: Player,
                 callback: PlayerNotificationManager.BitmapCallback,
             ): Bitmap? {
-
                 val uri = player.currentMediaItem?.mediaMetadata?.artworkUri
                 return if (uri == null) {
                     // set default image
@@ -129,17 +126,7 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
                     )
                 } else {
                     try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            ImageDecoder.decodeBitmap(ImageDecoder.createSource(
-                                applicationContext.contentResolver,
-                                uri
-                            ))
-                        } else {
-                            MediaStore.Images.Media.getBitmap(
-                                applicationContext.contentResolver,
-                                uri
-                            )
-                        }
+                        uri.toBitmap(applicationContext)
                     } catch (e: Exception) {
                         // set default image
                         BitmapFactory.decodeResource(
@@ -158,13 +145,7 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
 
             override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
                 super.onNotificationCancelled(notificationId, dismissedByUser)
-
-                // remove notification
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                } else {
-                    stopForeground(true)
-                }
+                stopForeground()
                 stopSelf()
             }
 
@@ -173,20 +154,9 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
                 notification: Notification,
                 ongoing: Boolean,
             ) {
-
                 if (ongoing) {
                     startForeground(notificationId, notification)
-                } else {
-                    // if view is not exist stop foreground
-                    if (!isViewExist) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            stopForeground(STOP_FOREGROUND_DETACH)
-                        } else {
-                            stopForeground(false)
-                        }
-                    }
                 }
-
             }
         }
     }
@@ -218,6 +188,8 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
                 serviceMediaListener?.onIsPlayingChanged(isPlaying)
+                removeNotification(isPlaying, isViewExist)
+
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -228,15 +200,25 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
         })
     }
 
+    private fun removeNotification(isPlaying: Boolean, isViewExist: Boolean) {
+        removeNotificationJob = if (!isPlaying && !isViewExist) {
+            val s = SupervisorJob()
+            CoroutineScope(Dispatchers.IO + s).launch {
+                delay(Constans.NOTIFICATION_REMOVE_TIME) // remove notification after 5 minute
+                saveData()
+                stopForeground()
+            }
+        } else {
+            removeNotificationJob?.cancel()
+            null
+        }
+    }
+
     override fun onDestroy() {
         if (exoPlayer.isPlaying) exoPlayer.stop()
         // save last music info
         saveData()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            stopForeground(true)
-        }
+        stopForeground()
         super.onDestroy()
 
     }

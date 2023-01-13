@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.IBinder
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
@@ -112,7 +113,10 @@ constructor(
 
     // play or pause music
     fun playOrPauseMusic() {
-        app.startService(Intent(app, MediaPlayerService::class.java))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            app.startForegroundService(Intent(app, MediaPlayerService::class.java))
+        else app.startService(Intent(app, MediaPlayerService::class.java))
+
         musicPlayer.playOrPauseMusic()
     }
 
