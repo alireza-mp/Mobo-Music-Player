@@ -5,7 +5,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Build
 import android.os.IBinder
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
@@ -18,10 +17,7 @@ import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.domain.useCase.GetHomeViewStateUseCase
 import com.digimoplus.moboplayer.domain.useCase.SavePlayListUseCase
-import com.digimoplus.moboplayer.util.DataState
-import com.digimoplus.moboplayer.util.MusicState
-import com.digimoplus.moboplayer.util.UiState
-import com.digimoplus.moboplayer.util.convertPercentageToSecond
+import com.digimoplus.moboplayer.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -113,10 +109,6 @@ constructor(
 
     // play or pause music
     fun playOrPauseMusic() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            app.startForegroundService(Intent(app, MediaPlayerService::class.java))
-        else app.startService(Intent(app, MediaPlayerService::class.java))
-
         musicPlayer.playOrPauseMusic()
     }
 
@@ -185,6 +177,7 @@ constructor(
 
             override fun play() {
                 musicUIState = MusicState.Play
+                app.startMediaPlayerService()
             }
 
             override fun pause() {
@@ -205,6 +198,11 @@ constructor(
 
             override fun updateCurrentMusic(music: Music) {
                 currentMusicUi = music
+            }
+
+            override fun resetPercentageAndDuration() {
+                percentage = 0f
+                duration = "0:00"
             }
         }
     }

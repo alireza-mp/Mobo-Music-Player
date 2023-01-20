@@ -128,6 +128,7 @@ class MusicPlayer : ServiceMediaListener {
 
     // music play seekTo by percentage
     fun seekTo(percentage: Float) {
+        exoPlayer.prepare()
         exoPlayer.seekTo(convertPercentageToMilliSeconds(exoPlayer.duration, percentage))
     }
 
@@ -173,6 +174,7 @@ class MusicPlayer : ServiceMediaListener {
     // go to next music
     fun onNext() {
         if (exoPlayer.hasNextMediaItem()) {
+            resetDetails()
             exoPlayer.seekToNextMediaItem()
         }
     }
@@ -180,7 +182,16 @@ class MusicPlayer : ServiceMediaListener {
     // go to back
     fun onPrevious() {
         if (exoPlayer.hasPreviousMediaItem()) {
+            resetDetails()
             exoPlayer.seekToPreviousMediaItem()
+        }
+    }
+
+    /* when player is not playing update percentage and duration to zero
+      but when player is playing percentage and duration updated by player percentage and duration listener */
+    private fun resetDetails() {
+        if (!exoPlayer.isPlaying) {
+            uiListener?.resetPercentageAndDuration()
         }
     }
 

@@ -85,7 +85,7 @@ fun HomePage() {
 
 // screen content
 @Composable
-fun Content(
+private fun Content(
     viewModel: HomeViewModel,
     innerPadding: PaddingValues,
     scaffoldState: BottomSheetScaffoldState,

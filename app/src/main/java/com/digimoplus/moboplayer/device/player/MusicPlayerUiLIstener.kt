@@ -13,4 +13,5 @@ interface MusicPlayerUiListener {
     )
 
     fun updateCurrentMusic(music: Music)
+    fun resetPercentageAndDuration()
 }
