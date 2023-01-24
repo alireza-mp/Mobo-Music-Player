@@ -1,16 +1,10 @@
 package com.digimoplus.moboplayer.presentation.ui.home
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -26,30 +20,17 @@ import com.digimoplus.moboplayer.util.MusicState
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun DetailContent(viewModel: HomeViewModel, scaffoldState: BottomSheetScaffoldState) {
-
-    // alpha animation for detail content
-    val anim = remember { Animatable(initialValue = 0f) }
-    LaunchedEffect(scaffoldState.bottomSheetState.isExpanded) {
-        anim.snapTo(0f)
-        anim.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = 500,
-                easing = LinearEasing,
-            ),
-        )
-    }
+fun DetailContent(viewModel: HomeViewModel) {
 
     Box(modifier = Modifier.fillMaxWidth()) {
 
         // circle seekbar
-        CricleSeekBarContent(anim.value, viewModel)
+        CircleSeekBarContent(viewModel.currentFraction, viewModel)
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .alpha(anim.value) // set alpha anim
+                .alpha(viewModel.currentFraction) // set alpha anim
                 .padding(top = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -92,7 +73,7 @@ fun DetailContent(viewModel: HomeViewModel, scaffoldState: BottomSheetScaffoldSt
     // controller buttons
     ControllerButtons(
         isPlayIng = viewModel.musicUIState == MusicState.Play,
-        alpha = anim.value, // set alpha anim
+        alpha = viewModel.currentFraction, // set alpha anim
         shuffleState = viewModel.shuffleState,
         loopState = viewModel.loopState,
         onPlayPauseClick = viewModel::playOrPauseMusic,
@@ -112,7 +93,7 @@ private fun MultiStyleTextContent(viewModel: HomeViewModel) {
 }
 
 @Composable
-private fun CricleSeekBarContent(
+private fun CircleSeekBarContent(
     anim: Float,
     viewModel: HomeViewModel,
 ) {

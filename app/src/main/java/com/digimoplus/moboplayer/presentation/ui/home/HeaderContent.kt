@@ -1,14 +1,12 @@
 package com.digimoplus.moboplayer.presentation.ui.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,71 +55,8 @@ fun HeaderContent(
                     bottomStart = 150.dp),
                 backgroundColor = LightWhite,
             ) {
-                // card background image
                 FadeInImage(viewModel)
-
-                // music line content animated visibility
-                this@Row.AnimatedVisibility(
-                    visible = scaffoldState.bottomSheetState.isCollapsed,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .padding(
-                                    bottom = 48.dp,
-                                ),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            MusicLineAnimation(
-                                isPlaying = viewModel.musicUIState == MusicState.Play
-                            )
-                        }
-                    }
-                }
-
-                // music title animated visibility
-                this@Row.AnimatedVisibility(
-                    visible = scaffoldState.bottomSheetState.isExpanded,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .padding(
-                                    bottom = 35.dp,
-                                ),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            // music name
-                            ScrollingText(
-                                text = viewModel.currentMusicUi.title,
-                                color = LightWhite,
-                                paddingValues = PaddingValues(horizontal = 42.dp),
-                                style = MaterialTheme.typography.body1,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(modifier = Modifier.padding(top = 16.dp))
-
-                            // artist name
-                            ScrollingText(
-                                text = viewModel.currentMusicUi.artist,
-                                color = LightWhite,
-                                style = MaterialTheme.typography.caption,
-                                paddingValues = PaddingValues(horizontal = 68.dp),
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                    }
-                }
-
+                CardContent(viewModel)
             }
 
         }
@@ -138,6 +73,69 @@ fun HeaderContent(
         }
     }
 
+}
+
+@Composable
+private fun CardContent(viewModel: HomeViewModel) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .alpha(viewModel.currentFraction)
+    ) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(
+                    bottom = 48.dp,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            MusicLineAnimation(
+                isPlaying = viewModel.musicUIState == MusicState.Play
+            )
+        }
+    }
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .alpha(1f - viewModel.currentFraction)
+    ) {
+
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(
+                    bottom = 35.dp,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // music name
+            ScrollingText(
+                text = viewModel.currentMusicUi.title,
+                color = LightWhite,
+                paddingValues = PaddingValues(horizontal = 42.dp),
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.padding(top = 16.dp))
+
+            // artist name
+            ScrollingText(
+                text = viewModel.currentMusicUi.artist,
+                color = LightWhite,
+                style = MaterialTheme.typography.caption,
+                paddingValues = PaddingValues(horizontal = 68.dp),
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)

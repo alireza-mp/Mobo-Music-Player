@@ -50,6 +50,9 @@ constructor(
     private var serviceUiChangeListener: ServiceUiChangeListener? = null
     private lateinit var serviceConnection: ServiceConnection
 
+    // bottom sheet animation progress fraction
+    var currentFraction by mutableStateOf(0f)
+
 
     // get all music list
     fun getAllMusics() {

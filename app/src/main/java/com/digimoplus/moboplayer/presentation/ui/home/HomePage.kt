@@ -4,11 +4,10 @@ package com.digimoplus.moboplayer.presentation.ui.home
 
 import android.Manifest
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.BottomSheetScaffoldState
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +40,14 @@ fun HomePage() {
     val viewModel: HomeViewModel = hiltViewModel()
     val storagePermission = rememberPermissionState(Manifest.permission.READ_EXTERNAL_STORAGE)
     val coroutineScope = rememberCoroutineScope()
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberBottomSheetState(
+            initialValue = BottomSheetValue.Collapsed,
+            animationSpec = tween(durationMillis = 300, easing = LinearEasing),
+        )
+    )
+
+    //ObserveBottomSheetFraction(scaffoldState, viewModel)
 
     // request for storage permission
     RequestPermission(viewModel, storagePermission)
@@ -51,6 +57,7 @@ fun HomePage() {
 
     // main screen
     BottomSheetScaffold(
+        modifier = Modifier.fillMaxSize(),
         sheetContent = {
             if (viewModel.uiState == UiState.Success)
                 BottomSheetView(viewModel, scaffoldState, coroutineScope)
@@ -91,6 +98,7 @@ private fun Content(
     scaffoldState: BottomSheetScaffoldState,
     coroutineScope: CoroutineScope,
 ) {
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -110,7 +118,7 @@ private fun Content(
 
             // Content
             if (scaffoldState.bottomSheetState.isCollapsed) {
-                DetailContent(viewModel = viewModel, scaffoldState)
+                DetailContent(viewModel = viewModel)
             } else {
                 MusicListContent(viewModel = viewModel)
             }

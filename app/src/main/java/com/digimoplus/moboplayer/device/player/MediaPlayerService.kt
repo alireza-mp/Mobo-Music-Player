@@ -14,7 +14,7 @@ import androidx.core.app.NotificationCompat
 import com.digimoplus.moboplayer.R
 import com.digimoplus.moboplayer.domain.useCase.SaveLastMusicDataUseCase
 import com.digimoplus.moboplayer.presentation.ui.mainactivity.MainActivity
-import com.digimoplus.moboplayer.util.Constans
+import com.digimoplus.moboplayer.util.Constants
 import com.digimoplus.moboplayer.util.stopForeground
 import com.digimoplus.moboplayer.util.toBitmap
 import com.google.android.exoplayer2.C
@@ -39,7 +39,7 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
     lateinit var saveLastMusicDataUseCase: SaveLastMusicDataUseCase
 
     var serviceMediaListener: ServiceMediaListener? = null
-    private var isViewExist = false
+   // private var isViewExist = false
     private val chanelId = "Music Chanel"
     private val notificationId = 1111111
     private lateinit var mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter
@@ -82,8 +82,8 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
 
     // view exist listener
     override fun onViewExist(isExist: Boolean) {
-        isViewExist = isExist
-        removeNotification(exoPlayer.isPlaying, isExist)
+    //    isViewExist = isExist
+       // removeNotification(exoPlayer.isPlaying, isExist)
     }
 
     private fun initialMediaDescription() {
@@ -188,7 +188,7 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
                 serviceMediaListener?.onIsPlayingChanged(isPlaying)
-                removeNotification(isPlaying, isViewExist)
+                removeNotification(isPlaying)
 
             }
 
@@ -200,11 +200,11 @@ class MediaPlayerService : Service(), ServiceUiChangeListener {
         })
     }
 
-    private fun removeNotification(isPlaying: Boolean, isViewExist: Boolean) {
-        removeNotificationJob = if (!isPlaying && !isViewExist) {
+    private fun removeNotification(isPlaying: Boolean) {
+        removeNotificationJob = if (!isPlaying ) {
             val s = SupervisorJob()
             CoroutineScope(Dispatchers.IO + s).launch {
-                delay(Constans.NOTIFICATION_REMOVE_TIME) // remove notification after 5 minute
+                delay(Constants.NOTIFICATION_REMOVE_TIME) // remove notification after 5 minute
                 saveData()
                 stopForeground()
             }
