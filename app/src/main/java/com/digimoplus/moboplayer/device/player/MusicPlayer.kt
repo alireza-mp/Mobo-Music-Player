@@ -2,10 +2,7 @@ package com.digimoplus.moboplayer.device.player
 
 import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music
-import com.digimoplus.moboplayer.util.convertMilliSecondsToSecond
-import com.digimoplus.moboplayer.util.convertPercentageToMilliSeconds
-import com.digimoplus.moboplayer.util.convertPositionToPercentage
-import com.digimoplus.moboplayer.util.convertPositionToPercentageNotSuspend
+import com.digimoplus.moboplayer.util.*
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -14,13 +11,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
+import javax.inject.Inject
 
-class MusicPlayer : ServiceMediaListener {
+class MusicPlayer
+@Inject
+constructor(
+    private val exoPlayer: ExoPlayer,
+) : MusicServiceChangeListener {
 
-    // auto go to next music state
-    private lateinit var exoPlayer: ExoPlayer
     private var uiListener: MusicPlayerUiListener? = null
-
+    private var updateNotification: UpdateMusicNotificationListener? = null
+    var playListState: PlayListState = PlayListState.CURRENT
+        private set
 
     //serviceMediaListener
     override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -36,12 +38,10 @@ class MusicPlayer : ServiceMediaListener {
     }
 
     fun initialData(
-        exoPlayer: ExoPlayer,
         musicList: List<Music>,
         lastData: LastDataStore,
         musicPlayerUiListener: MusicPlayerUiListener,
     ) {
-        this.exoPlayer = exoPlayer
         this.uiListener = musicPlayerUiListener
 
         if (musicList.isNotEmpty()) {
@@ -72,12 +72,10 @@ class MusicPlayer : ServiceMediaListener {
                     currentPosition = lastData.currentPosition,
                 ),
                 duration = convertMilliSecondsToSecond(lastData.currentPosition),
-                isLoop = lastData.isLoop,
-                isShuffle = lastData.isShuffle,
+                playListState = lastData.playListState,
             )
         }
-        setShuffle(lastData.isShuffle)
-        setLoop(lastData.isLoop)
+        updatePlayListState(lastData.playListState)
     }
 
     private fun updateUiWithPlayerState() {
@@ -92,8 +90,7 @@ class MusicPlayer : ServiceMediaListener {
                 currentPosition = exoPlayer.currentPosition,
             ),
             duration = convertMilliSecondsToSecond(exoPlayer.currentPosition),
-            isLoop = exoPlayer.repeatMode == Player.REPEAT_MODE_ONE,
-            isShuffle = exoPlayer.shuffleModeEnabled,
+            playListState = playListState
         )
         uiListener?.updateCurrentMusic(mediaItemToMusic(exoPlayer.currentMediaItem))
     }
@@ -113,23 +110,36 @@ class MusicPlayer : ServiceMediaListener {
         }
     }
 
-    // enable loop mode
-    fun setLoop(enabled: Boolean) {
-        if (enabled)
-            exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
-        else
-            exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
-    }
-
-
-    fun setShuffle(enabled: Boolean) {
-        exoPlayer.shuffleModeEnabled = enabled
+    fun updatePlayListState(state: PlayListState) {
+        playListState = state
+        uiListener?.updatePlayListState(state)
+        updateNotification?.updatePlayListState(state)
+        when (state) {
+            PlayListState.CURRENT -> {
+                exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+                exoPlayer.shuffleModeEnabled = false
+            }
+            PlayListState.SHUFFLE -> {
+                exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+                exoPlayer.shuffleModeEnabled = true
+            }
+            PlayListState.LOOP -> {
+                exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
+                exoPlayer.shuffleModeEnabled = false
+            }
+        }
     }
 
     // music play seekTo by percentage
     fun seekTo(percentage: Float) {
         exoPlayer.prepare()
         exoPlayer.seekTo(convertPercentageToMilliSeconds(exoPlayer.duration, percentage))
+    }
+
+    // music play seekTo by long position
+    fun seekTo(position: Long) {
+        exoPlayer.prepare()
+        exoPlayer.seekTo(position)
     }
 
     //update ui duration as flow every 150 millisecond
@@ -163,6 +173,19 @@ class MusicPlayer : ServiceMediaListener {
 
     fun getDuration(): Long = exoPlayer.duration
 
+    // update notification by music player current position
+    suspend fun getCurrentPositionFlow(): Flow<Long> = callbackFlow {
+        while (true) {
+            if (exoPlayer.duration > 0 && exoPlayer.isPlaying) {
+                trySend(
+                    exoPlayer.currentPosition
+                )
+            }
+            delay(150)
+        }
+    }.flowOn(Dispatchers.Main)
+
+
     fun playOrPauseMusic() {
         if (exoPlayer.isPlaying) {
             pause()
@@ -195,7 +218,6 @@ class MusicPlayer : ServiceMediaListener {
         }
     }
 
-
     // on music item clicked
     fun onItemClick(index: Int) {
         // check if current music is clicked or not
@@ -207,6 +229,15 @@ class MusicPlayer : ServiceMediaListener {
                 exoPlayer.play()
             }
         }
+    }
+
+    fun removeNotification() {
+        pause()
+        updateNotification?.removeNotification()
+    }
+
+    fun setUpdateNotification(listener: UpdateMusicNotificationListener) {
+        this.updateNotification = listener
     }
 
 }

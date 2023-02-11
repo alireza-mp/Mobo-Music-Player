@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.CodeBoy.MediaFacer.AudioGet
 import com.CodeBoy.MediaFacer.MediaFacer
+import com.digimoplus.moboplayer.device.player.MusicNotificationManager
 import com.digimoplus.moboplayer.device.player.MusicPlayer
 import com.google.android.exoplayer2.ExoPlayer
 import dagger.Module
@@ -33,8 +34,24 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMusicPlayer(): MusicPlayer {
-        return MusicPlayer()
+    fun provideMusicPlayer(
+        exoPlayer: ExoPlayer,
+    ): MusicPlayer {
+        return MusicPlayer(
+            exoPlayer = exoPlayer,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMusicNotificationManager(
+        musicPlayer: MusicPlayer,
+        app: Application,
+    ): MusicNotificationManager {
+        return MusicNotificationManager(
+            musicPlayer = musicPlayer,
+            context = app
+        )
     }
 
     @Provides

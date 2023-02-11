@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.digimoplus.moboplayer.data.repository.dataSource.DataStoreLocalDataSource
+import com.digimoplus.moboplayer.util.PlayListState
 import com.digimoplus.moboplayer.util.PreferencesKeys
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -23,11 +24,15 @@ constructor(
     override suspend fun getLastMusicCurrentPosition(): Long =
         dataStore.data.first()[PreferencesKeys.musicCurrentPosition]?.toLong() ?: 0
 
-    override suspend fun getIsShuffle(): Boolean =
-        dataStore.data.first()[PreferencesKeys.isShuffleKey]?.toBoolean() ?: false
+    override suspend fun getPlayListState(): PlayListState {
+        return when (dataStore.data.first()[PreferencesKeys.musicPlayListStateKey]?.toString()) {
+            PlayListState.LOOP.state -> PlayListState.LOOP
+            PlayListState.SHUFFLE.state -> PlayListState.SHUFFLE
+            PlayListState.CURRENT.state -> PlayListState.CURRENT
+            else -> PlayListState.CURRENT
+        }
+    }
 
-    override suspend fun getIsLoop(): Boolean =
-       dataStore.data.first()[PreferencesKeys.isLoopKey]?.toBoolean() ?: false
 
     override suspend fun saveLastMusicData(
         duration: Long,
@@ -41,10 +46,9 @@ constructor(
         }
     }
 
-    override suspend fun savePlayListData(isLoop: Boolean, isShuffle: Boolean) {
+    override suspend fun savePlayListState(state: PlayListState) {
         dataStore.edit {
-            it[PreferencesKeys.isLoopKey] = isLoop.toString()
-            it[PreferencesKeys.isShuffleKey] = isShuffle.toString()
+            it[PreferencesKeys.musicPlayListStateKey] = state.state
         }
     }
 

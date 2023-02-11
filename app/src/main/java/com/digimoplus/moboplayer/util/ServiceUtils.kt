@@ -8,14 +8,10 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import com.digimoplus.moboplayer.device.player.MediaPlayerService
+import com.digimoplus.moboplayer.device.player.MusicPlayerService
 
 fun Service.stopForeground() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        stopForeground(Service.STOP_FOREGROUND_REMOVE)
-    } else {
-        stopForeground(true)
-    }
+    stopForeground(Service.STOP_FOREGROUND_REMOVE)
 }
 
 // use this in try-catch block
@@ -36,9 +32,5 @@ fun Uri.toBitmap(context: Context): Bitmap {
 }
 
 fun Context.startMediaPlayerService() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        this.startForegroundService(Intent(this, MediaPlayerService::class.java))
-    } else {
-        this.startService(Intent(this, MediaPlayerService::class.java))
-    }
+    this.startForegroundService(Intent(this, MusicPlayerService::class.java))
 }

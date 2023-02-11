@@ -19,7 +19,7 @@
         android:theme="@style/Theme.MusicApplication"
         tools:targetApi="31">
         <service
-            android:name=".device.player.MediaPlayerService"
+            android:name=".device.player.MusicPlayerService"
             android:enabled="true"
             android:exported="false" />
 
@@ -35,6 +35,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".device.player.MusicNotificationReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

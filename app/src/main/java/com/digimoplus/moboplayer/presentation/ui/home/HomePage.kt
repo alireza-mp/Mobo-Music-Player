@@ -9,17 +9,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.digimoplus.moboplayer.presentation.componnets.BottomSheetView
 import com.digimoplus.moboplayer.presentation.componnets.DrawerContent
 import com.digimoplus.moboplayer.presentation.componnets.LogoView
@@ -142,33 +137,6 @@ private fun RequestPermission(
         LaunchedEffect(Unit) {
             // get all musics
             viewModel.getAllMusics()
-        }
-        ObserveLifecycle(viewModel)
-    }
-}
-
-@Composable
-private fun ObserveLifecycle(
-    viewModel: HomeViewModel,
-) {
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(LocalView.current) {
-
-        // observer for update service when app destroy
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_STOP -> {
-                    viewModel.savePlayListState()
-                }
-                Lifecycle.Event.ON_DESTROY -> {
-                    viewModel.updateViewExistListener()
-                }
-                else -> {}
-            }
-        }
-        lifecycle.addObserver(observer)
-        onDispose {
-            lifecycle.removeObserver(observer)
         }
     }
 }

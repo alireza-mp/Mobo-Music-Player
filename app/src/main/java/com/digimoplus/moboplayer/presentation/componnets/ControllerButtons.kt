@@ -20,20 +20,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.digimoplus.moboplayer.R
 import com.digimoplus.moboplayer.presentation.theme.DarkGray
-import com.digimoplus.moboplayer.presentation.theme.LightGray
+import com.digimoplus.moboplayer.util.PlayListState
 
 @ExperimentalMaterialApi
 @Composable
 fun ControllerButtons(
     isPlayIng: Boolean,
     alpha: Float,
-    shuffleState: Boolean,
-    loopState: Boolean,
+    playListState: PlayListState,
     onPlayPauseClick: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
-    onLoop: (Boolean) -> Unit,
-    onShuffle: (Boolean) -> Unit,
+    onPlayListChange: (PlayListState) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -41,19 +39,43 @@ fun ControllerButtons(
             .alpha(alpha),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.CenterEnd) {
-            // auto next button
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            // play list state button
             IconButton(
                 onClick = {
-                    // update auto next state
-                    onShuffle(!shuffleState)
+                    // update state
+                    when (playListState) {
+                        PlayListState.CURRENT -> {
+                            onPlayListChange(PlayListState.SHUFFLE)
+                        }
+                        PlayListState.SHUFFLE -> {
+                            onPlayListChange(PlayListState.LOOP)
+                        }
+                        PlayListState.LOOP -> {
+                            onPlayListChange(PlayListState.CURRENT)
+                        }
+                    }
                 },
             ) {
                 Icon(
                     modifier = Modifier.size(24.dp),
-                    tint = if (shuffleState) DarkGray else LightGray,
-                    painter = painterResource(id = R.drawable.ic_shuffle),
+                    tint = DarkGray,
+                    painter = painterResource(
+                        id = when (playListState) {
+                            PlayListState.CURRENT -> {
+                                R.drawable.ic_current
+                            }
+                            PlayListState.SHUFFLE -> {
+                                R.drawable.ic_shuffle
+                            }
+                            PlayListState.LOOP -> {
+                                R.drawable.ic_repeat
+                            }
+                        }
+                    ),
                     contentDescription = null,
                 )
             }
@@ -86,8 +108,10 @@ fun ControllerButtons(
                 modifier = Modifier.size(60.dp),
                 onClick = onPlayPauseClick,
             ) {
-                Box(modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         modifier = Modifier.size(24.dp),
                         tint = Color.White,
@@ -117,20 +141,7 @@ fun ControllerButtons(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.CenterStart,
         ) {
-            // loop button
-            IconButton(
-                onClick = {
-                    // update loop state
-                    onLoop(!loopState)
-                },
-            ) {
-                Icon(
-                    modifier = Modifier.size(26.dp),
-                    tint = if (loopState) DarkGray else LightGray,
-                    painter = painterResource(id = R.drawable.ic_repeat),
-                    contentDescription = null,
-                )
-            }
+            //  button
         }
     }
 }

@@ -9,14 +9,12 @@ import android.os.IBinder
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.digimoplus.moboplayer.device.player.MediaPlayerService
 import com.digimoplus.moboplayer.device.player.MusicPlayer
+import com.digimoplus.moboplayer.device.player.MusicPlayerService
 import com.digimoplus.moboplayer.device.player.MusicPlayerUiListener
-import com.digimoplus.moboplayer.device.player.ServiceUiChangeListener
 import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.domain.useCase.GetHomeViewStateUseCase
-import com.digimoplus.moboplayer.domain.useCase.SavePlayListUseCase
 import com.digimoplus.moboplayer.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -30,14 +28,12 @@ class HomeViewModel
 @Inject
 constructor(
     private val homeViewUseCase: GetHomeViewStateUseCase,
-    private val savePlayListUseCase: SavePlayListUseCase,
     private val musicPlayer: MusicPlayer,
     private val app: Application,
 ) : ViewModel() {
 
     var musicUIState by mutableStateOf(MusicState.Pause)
-    var loopState by mutableStateOf(false)
-    var shuffleState by mutableStateOf(false)
+    var playListState by mutableStateOf(PlayListState.CURRENT)
     val musicList = mutableStateListOf<Music>()
     var uiState by mutableStateOf(UiState.Loading)
         private set
@@ -47,7 +43,6 @@ constructor(
         private set
     var percentage by mutableStateOf(0f)
         private set
-    private var serviceUiChangeListener: ServiceUiChangeListener? = null
     private lateinit var serviceConnection: ServiceConnection
 
     // bottom sheet animation progress fraction
@@ -76,22 +71,9 @@ constructor(
         }
     }
 
-    fun updateViewExistListener() {
-        serviceUiChangeListener?.onViewExist(false)
-    }
-
     // on music item clicked
     fun onItemClick(index: Int) {
         musicPlayer.onItemClick(index)
-    }
-
-    fun savePlayListState() {
-        viewModelScope.launch {
-            savePlayListUseCase.invoke(
-                isLoop = loopState,
-                isShuffle = shuffleState,
-            )
-        }
     }
 
     // user finger up from seek bar
@@ -130,16 +112,9 @@ constructor(
         musicPlayer.onNext()
     }
 
-    // enable music player shuffle auto next
-    fun onPlayListChange(isShuffle: Boolean) {
-        shuffleState = isShuffle
-        musicPlayer.setShuffle(isShuffle)
-    }
-
-    // enable music player looping
-    fun onLoop(state: Boolean) {
-        loopState = state
-        musicPlayer.setLoop(state)
+    // update play list state
+    fun onPlayListChange(playListState: PlayListState) {
+        musicPlayer.updatePlayListState(playListState)
     }
 
     // listening to percentage change for update duration when user change seek bar and player is pause
@@ -190,13 +165,15 @@ constructor(
             override fun updateUiByPlayerState(
                 percentage: Float,
                 duration: String,
-                isLoop: Boolean,
-                isShuffle: Boolean,
+                playListState: PlayListState,
             ) {
-                loopState = isLoop
-                shuffleState = isShuffle
+                this@HomeViewModel.playListState = playListState
                 this@HomeViewModel.percentage = percentage
                 this@HomeViewModel.duration = duration
+            }
+
+            override fun updatePlayListState(playListState: PlayListState) {
+                this@HomeViewModel.playListState = playListState
             }
 
             override fun updateCurrentMusic(music: Music) {
@@ -215,18 +192,14 @@ constructor(
         return object : ServiceConnection {
             override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
 
-                val binder: MediaPlayerService.ServiceBinder =
-                    p1 as MediaPlayerService.ServiceBinder
+                val binder: MusicPlayerService.ServiceBinder =
+                    p1 as MusicPlayerService.ServiceBinder
                 val service = binder.getMediaPlayerService()
                 // set service media player listener from music player
-                service.serviceMediaListener = musicPlayer
-                // set view exist listener from service
-                serviceUiChangeListener = service
-                // set view exist true
-                serviceUiChangeListener?.onViewExist(true)
+                service.musicServiceChangeListener = musicPlayer
+
                 // initial music player data
                 musicPlayer.initialData(
-                    exoPlayer = service.exoPlayer,
                     musicList = musicList,
                     lastData = lastDataStore,
                     musicPlayerUiListener = initialMusicPlayerUIListener(), // set music player ui listener
@@ -247,7 +220,7 @@ constructor(
     private fun getService(lastDataStore: LastDataStore) {
         // uiState success call in service connection
         serviceConnection = initialServiceConnection(lastDataStore)
-        val intent = Intent(app, MediaPlayerService::class.java)
+        val intent = Intent(app, MusicPlayerService::class.java)
         app.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 

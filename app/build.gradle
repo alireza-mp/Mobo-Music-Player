@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.digimoplus.moboplayer"
-        minSdk 21
+        minSdk 26
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -88,5 +88,8 @@ dependencies {
 
     // exo player
     implementation 'com.google.android.exoplayer:exoplayer:2.18.1'
+    implementation 'com.google.android.exoplayer:extension-mediasession:2.18.1'
+
+    implementation "androidx.media:media:1.6.0"
 
 }

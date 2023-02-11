@@ -1,5 +1,7 @@
 package com.digimoplus.moboplayer.data.repository.dataSource
 
+import com.digimoplus.moboplayer.util.PlayListState
+
 interface DataStoreLocalDataSource {
 
     suspend fun getLastMusicTitle(): String
@@ -8,9 +10,7 @@ interface DataStoreLocalDataSource {
 
     suspend fun getLastMusicCurrentPosition(): Long
 
-    suspend fun getIsShuffle(): Boolean
-
-    suspend fun getIsLoop(): Boolean
+    suspend fun getPlayListState(): PlayListState
 
     suspend fun saveLastMusicData(
         duration: Long,
@@ -18,8 +18,7 @@ interface DataStoreLocalDataSource {
         musicTitle: String,
     )
 
-    suspend fun savePlayListData(
-        isLoop: Boolean,
-        isShuffle: Boolean,
+    suspend fun savePlayListState(
+        state: PlayListState,
     )
 }

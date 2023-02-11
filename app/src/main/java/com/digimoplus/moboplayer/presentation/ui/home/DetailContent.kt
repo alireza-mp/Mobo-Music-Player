@@ -74,13 +74,11 @@ fun DetailContent(viewModel: HomeViewModel) {
     ControllerButtons(
         isPlayIng = viewModel.musicUIState == MusicState.Play,
         alpha = viewModel.currentFraction, // set alpha anim
-        shuffleState = viewModel.shuffleState,
-        loopState = viewModel.loopState,
+        playListState = viewModel.playListState,
         onPlayPauseClick = viewModel::playOrPauseMusic,
         onNext = viewModel::onNext,
         onPrevious = viewModel::onPrevious,
-        onShuffle = { viewModel.onPlayListChange(it) },
-        onLoop = { viewModel.onLoop(it) }
+        onPlayListChange = { viewModel.onPlayListChange(it) },
     )
 }
 

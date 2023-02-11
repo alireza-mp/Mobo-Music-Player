@@ -3,6 +3,7 @@ package com.digimoplus.moboplayer.domain.repostiry
 import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.util.DataState
+import com.digimoplus.moboplayer.util.PlayListState
 import kotlinx.coroutines.flow.Flow
 
 interface MusicsRepository {
@@ -19,9 +20,8 @@ interface MusicsRepository {
         musicTitle: String,
     )
 
-    suspend fun savePlayListData(
-        isLoop:Boolean,
-        isShuffle:Boolean,
+    suspend fun savePlayListState(
+        state: PlayListState,
     )
 
 }

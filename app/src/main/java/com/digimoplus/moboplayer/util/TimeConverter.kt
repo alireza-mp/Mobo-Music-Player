@@ -6,11 +6,20 @@ import java.util.concurrent.TimeUnit
 
 
 fun convertMilliSecondsToSecond(currentPosition: Long): String {
-    return String.format("%d:%02d",
+    return String.format(
+        "%d:%02d",
         TimeUnit.MILLISECONDS.toMinutes(currentPosition),
         TimeUnit.MILLISECONDS.toSeconds(currentPosition) -
                 TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition))
     )
+}
+
+//  00:00
+fun convertMinuteToMilliSeconds(min: String): Long {
+    val time = min.split(":")
+    val minute = time[0].toInt()
+    val second = time[1].toInt()
+    return (((minute * 60) + second) * 1000L)
 }
 
 suspend fun convertPercentageToSecond(duration: Long, percentage: Float): String {

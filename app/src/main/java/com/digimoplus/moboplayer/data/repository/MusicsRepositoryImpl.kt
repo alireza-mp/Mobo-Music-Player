@@ -7,6 +7,7 @@ import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.domain.models.mapToDomainModel
 import com.digimoplus.moboplayer.domain.repostiry.MusicsRepository
 import com.digimoplus.moboplayer.util.DataState
+import com.digimoplus.moboplayer.util.PlayListState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -35,8 +36,7 @@ constructor(
             duration = dataStoreLocalDataSource.getLastMusicDuration(),
             currentPosition = dataStoreLocalDataSource.getLastMusicCurrentPosition(),
             lastMusicIndex = musicsLocalDataSource.getLastMusicIndex(),
-            isShuffle = dataStoreLocalDataSource.getIsShuffle(),
-            isLoop = dataStoreLocalDataSource.getIsLoop(),
+            playListState = dataStoreLocalDataSource.getPlayListState()
         )
         emit(DataState.Success(lastDataStore))
     }
@@ -44,13 +44,13 @@ constructor(
     override suspend fun saveLastMusicData(
         duration: Long,
         currentPosition: Long,
-        musicTitle: String
+        musicTitle: String,
     ) {
-        dataStoreLocalDataSource.saveLastMusicData(duration, currentPosition,musicTitle)
+        dataStoreLocalDataSource.saveLastMusicData(duration, currentPosition, musicTitle)
     }
 
-    override suspend fun savePlayListData(isLoop: Boolean, isShuffle: Boolean) {
-        dataStoreLocalDataSource.savePlayListData(isLoop, isShuffle)
+    override suspend fun savePlayListState(state: PlayListState) {
+        dataStoreLocalDataSource.savePlayListState(state)
     }
 
 }
