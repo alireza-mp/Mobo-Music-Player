@@ -19,7 +19,7 @@
         android:theme="@style/Theme.MusicApplication"
         tools:targetApi="31">
         <service
-            android:name=".device.player.MusicPlayerService"
+            android:name=".data.device.player.MusicPlayerService"
             android:enabled="true"
             android:exported="false" />
 
@@ -37,7 +37,7 @@
         </activity>
 
         <receiver
-            android:name=".device.player.MusicNotificationReceiver"
+            android:name=".data.device.player.MusicNotificationReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

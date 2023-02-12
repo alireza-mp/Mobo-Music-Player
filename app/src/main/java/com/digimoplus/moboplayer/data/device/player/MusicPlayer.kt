@@ -1,4 +1,4 @@
-package com.digimoplus.moboplayer.device.player
+package com.digimoplus.moboplayer.data.device.player
 
 import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music

@@ -1,9 +1,9 @@
-package com.digimoplus.moboplayer.data.repository.dataSourceImpl
+package com.digimoplus.moboplayer.data.dataSourceImpl
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import com.digimoplus.moboplayer.data.repository.dataSource.DataStoreLocalDataSource
+import com.digimoplus.moboplayer.data.dataSource.DataStoreDataSource
 import com.digimoplus.moboplayer.util.PlayListState
 import com.digimoplus.moboplayer.util.PreferencesKeys
 import kotlinx.coroutines.flow.first
@@ -13,7 +13,7 @@ class DataStoreLocalDataSourceImpl
 @Inject
 constructor(
     private val dataStore: DataStore<Preferences>,
-) : DataStoreLocalDataSource {
+) : DataStoreDataSource {
 
     override suspend fun getLastMusicTitle(): String =
         dataStore.data.first()[PreferencesKeys.musicTitleKey] ?: "/+/"

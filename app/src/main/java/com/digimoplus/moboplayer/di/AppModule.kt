@@ -7,8 +7,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.CodeBoy.MediaFacer.AudioGet
 import com.CodeBoy.MediaFacer.MediaFacer
-import com.digimoplus.moboplayer.device.player.MusicNotificationManager
-import com.digimoplus.moboplayer.device.player.MusicPlayer
+import com.digimoplus.moboplayer.data.device.player.MusicNotificationManager
+import com.digimoplus.moboplayer.data.device.player.MusicPlayer
 import com.google.android.exoplayer2.ExoPlayer
 import dagger.Module
 import dagger.Provides

@@ -1,8 +1,8 @@
-package com.digimoplus.moboplayer.data.repository.dataSource
+package com.digimoplus.moboplayer.data.dataSource
 
 import com.CodeBoy.MediaFacer.mediaHolders.audioContent
 
-interface MusicsLocalDataSource {
+interface MusicsDataSource {
 
     // get all musics list
     suspend fun getAllMusicLists(): List<audioContent>?

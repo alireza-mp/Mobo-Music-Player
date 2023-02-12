@@ -8,7 +8,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import com.digimoplus.moboplayer.device.player.MusicPlayerService
+import com.digimoplus.moboplayer.data.device.player.MusicPlayerService
 
 fun Service.stopForeground() {
     stopForeground(Service.STOP_FOREGROUND_REMOVE)

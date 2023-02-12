@@ -1,7 +1,7 @@
 package com.digimoplus.moboplayer.data.repository
 
-import com.digimoplus.moboplayer.data.repository.dataSource.DataStoreLocalDataSource
-import com.digimoplus.moboplayer.data.repository.dataSource.MusicsLocalDataSource
+import com.digimoplus.moboplayer.data.dataSource.DataStoreDataSource
+import com.digimoplus.moboplayer.data.dataSource.MusicsDataSource
 import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.domain.models.mapToDomainModel
@@ -15,17 +15,17 @@ import javax.inject.Inject
 class MusicsRepositoryImpl
 @Inject
 constructor(
-    private val musicsLocalDataSource: MusicsLocalDataSource,
-    private val dataStoreLocalDataSource: DataStoreLocalDataSource,
+    private val musicsDataSource: MusicsDataSource,
+    private val dataStoreDataSource: DataStoreDataSource,
 ) : MusicsRepository {
 
     // get all musics
     override suspend fun getAllMusicList(): Flow<DataState<List<Music>>> = flow {
         emit(DataState.Loading)
-        val result = musicsLocalDataSource.getAllMusicLists()
+        val result = musicsDataSource.getAllMusicLists()
         result ?: emit(DataState.Error)
         result?.let {
-            emit(DataState.Success(result.map { mapToDomainModel(it) })) //add mapper
+            emit(DataState.Success(result.map { it.mapToDomainModel() })) //add mapper
         }
     }
 
@@ -33,10 +33,10 @@ constructor(
     override suspend fun getLastDataStore(): Flow<DataState<LastDataStore>> = flow {
         emit(DataState.Loading)
         val lastDataStore = LastDataStore(
-            duration = dataStoreLocalDataSource.getLastMusicDuration(),
-            currentPosition = dataStoreLocalDataSource.getLastMusicCurrentPosition(),
-            lastMusicIndex = musicsLocalDataSource.getLastMusicIndex(),
-            playListState = dataStoreLocalDataSource.getPlayListState()
+            duration = dataStoreDataSource.getLastMusicDuration(),
+            currentPosition = dataStoreDataSource.getLastMusicCurrentPosition(),
+            lastMusicIndex = musicsDataSource.getLastMusicIndex(),
+            playListState = dataStoreDataSource.getPlayListState()
         )
         emit(DataState.Success(lastDataStore))
     }
@@ -46,11 +46,11 @@ constructor(
         currentPosition: Long,
         musicTitle: String,
     ) {
-        dataStoreLocalDataSource.saveLastMusicData(duration, currentPosition, musicTitle)
+        dataStoreDataSource.saveLastMusicData(duration, currentPosition, musicTitle)
     }
 
     override suspend fun savePlayListState(state: PlayListState) {
-        dataStoreLocalDataSource.savePlayListState(state)
+        dataStoreDataSource.savePlayListState(state)
     }
 
 }

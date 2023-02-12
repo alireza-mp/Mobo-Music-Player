@@ -1,8 +1,8 @@
-package com.digimoplus.moboplayer.data.repository.dataSource
+package com.digimoplus.moboplayer.data.dataSource
 
 import com.digimoplus.moboplayer.util.PlayListState
 
-interface DataStoreLocalDataSource {
+interface DataStoreDataSource {
 
     suspend fun getLastMusicTitle(): String
 

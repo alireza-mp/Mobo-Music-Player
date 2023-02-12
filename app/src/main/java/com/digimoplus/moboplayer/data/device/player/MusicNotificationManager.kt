@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterialApi::class, DelicateCoroutinesApi::class)
 
-package com.digimoplus.moboplayer.device.player
+package com.digimoplus.moboplayer.data.device.player
 
 
 import android.annotation.SuppressLint

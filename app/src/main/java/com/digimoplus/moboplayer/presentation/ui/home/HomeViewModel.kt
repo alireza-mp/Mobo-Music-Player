@@ -9,9 +9,9 @@ import android.os.IBinder
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.digimoplus.moboplayer.device.player.MusicPlayer
-import com.digimoplus.moboplayer.device.player.MusicPlayerService
-import com.digimoplus.moboplayer.device.player.MusicPlayerUiListener
+import com.digimoplus.moboplayer.data.device.player.MusicPlayer
+import com.digimoplus.moboplayer.data.device.player.MusicPlayerService
+import com.digimoplus.moboplayer.data.device.player.MusicPlayerUiListener
 import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.domain.useCase.GetHomeViewStateUseCase

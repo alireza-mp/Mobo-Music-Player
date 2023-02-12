@@ -1,4 +1,4 @@
-package com.digimoplus.moboplayer.device.player
+package com.digimoplus.moboplayer.data.device.player
 
 import com.digimoplus.moboplayer.domain.models.Music
 import com.google.android.exoplayer2.MediaItem

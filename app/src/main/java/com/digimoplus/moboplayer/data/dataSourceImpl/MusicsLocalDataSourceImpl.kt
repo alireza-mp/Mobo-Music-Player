@@ -1,16 +1,16 @@
-package com.digimoplus.moboplayer.data.repository.dataSourceImpl
+package com.digimoplus.moboplayer.data.dataSourceImpl
 
 import com.CodeBoy.MediaFacer.AudioGet
 import com.CodeBoy.MediaFacer.mediaHolders.audioContent
-import com.digimoplus.moboplayer.data.repository.dataSource.DataStoreLocalDataSource
-import com.digimoplus.moboplayer.data.repository.dataSource.MusicsLocalDataSource
+import com.digimoplus.moboplayer.data.dataSource.DataStoreDataSource
+import com.digimoplus.moboplayer.data.dataSource.MusicsDataSource
 import javax.inject.Inject
 
 class MusicsLocalDataSourceImpl
 @Inject constructor(
     private val audioGet: AudioGet,
-    private val dataStoreLocalDataSource: DataStoreLocalDataSource,
-) : MusicsLocalDataSource {
+    private val dataStoreDataSource: DataStoreDataSource,
+) : MusicsDataSource {
 
     override suspend fun getAllMusicLists(): List<audioContent>? {
         return audioGet.getAllAudioContent(AudioGet.externalContentUri)
@@ -18,7 +18,7 @@ class MusicsLocalDataSourceImpl
 
     override suspend fun getLastMusicIndex(): Int {
         // search for last music
-        val result = audioGet.searchMusic(dataStoreLocalDataSource.getLastMusicTitle())
+        val result = audioGet.searchMusic(dataStoreDataSource.getLastMusicTitle())
         // if founded
         return if (result.size != 0) {
             var index = -1

@@ -1,4 +1,4 @@
-package com.digimoplus.moboplayer.device.player
+package com.digimoplus.moboplayer.data.device.player
 
 import android.app.*
 import android.content.Intent
