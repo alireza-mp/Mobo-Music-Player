@@ -15,14 +15,18 @@ constructor(
     private val dataStore: DataStore<Preferences>,
 ) : DataStoreDataSource {
 
-    override suspend fun getLastMusicTitle(): String =
-        dataStore.data.first()[PreferencesKeys.musicTitleKey] ?: "/+/"
+    override suspend fun getLastMusicId(): Int =
+        dataStore.data.first()[PreferencesKeys.musicTitleKey]?.toInt() ?: 0
+
+    override suspend fun getLastPlayListId(): Int {
+        return dataStore.data.first()[PreferencesKeys.musicCurrentPlayListKey]?.toInt() ?: 0
+    }
 
     override suspend fun getLastMusicDuration(): Long =
         dataStore.data.first()[PreferencesKeys.musicDurationKey]?.toLong() ?: 0
 
     override suspend fun getLastMusicCurrentPosition(): Long =
-        dataStore.data.first()[PreferencesKeys.musicCurrentPosition]?.toLong() ?: 0
+        dataStore.data.first()[PreferencesKeys.musicCurrentPositionKey]?.toLong() ?: 0
 
     override suspend fun getPlayListState(): PlayListState {
         return when (dataStore.data.first()[PreferencesKeys.musicPlayListStateKey]?.toString()) {
@@ -37,12 +41,14 @@ constructor(
     override suspend fun saveLastMusicData(
         duration: Long,
         currentPosition: Long,
-        musicTitle: String,
+        currentMusicId: Int,
+        currentPlayListId: Int,
     ) {
         dataStore.edit {
             it[PreferencesKeys.musicDurationKey] = duration.toString()
-            it[PreferencesKeys.musicCurrentPosition] = currentPosition.toString()
-            it[PreferencesKeys.musicTitleKey] = musicTitle
+            it[PreferencesKeys.musicCurrentPositionKey] = currentPosition.toString()
+            it[PreferencesKeys.musicTitleKey] = currentMusicId.toString()
+            it[PreferencesKeys.musicCurrentPlayListKey] = currentPlayListId.toString()
         }
     }
 

@@ -9,6 +9,7 @@ import com.digimoplus.moboplayer.data.dataSource.PlayListDataSource
 import com.digimoplus.moboplayer.data.dataSourceImpl.DataStoreLocalDataSourceImpl
 import com.digimoplus.moboplayer.data.dataSourceImpl.MusicsLocalDataSourceImpl
 import com.digimoplus.moboplayer.data.dataSourceImpl.PlayListLocalDataSourceImpl
+import com.digimoplus.moboplayer.data.db.dao.MusicDao
 import com.digimoplus.moboplayer.data.db.dao.PlayListDao
 import dagger.Module
 import dagger.Provides
@@ -25,8 +26,9 @@ object LocalDataModule {
     fun provideMusicsDataSource(
         audioGet: AudioGet,
         dataStoreDataSource: DataStoreDataSource,
+        musicDao: MusicDao,
     ): MusicsDataSource {
-        return MusicsLocalDataSourceImpl(audioGet, dataStoreDataSource)
+        return MusicsLocalDataSourceImpl(audioGet, dataStoreDataSource, musicDao)
     }
 
     @Singleton
@@ -35,6 +37,18 @@ object LocalDataModule {
         datastore: DataStore<Preferences>,
     ): DataStoreDataSource {
         return DataStoreLocalDataSourceImpl(datastore)
+    }
+
+    @Singleton
+    @Provides
+    fun providePlayListDataSource(
+        playListDao: PlayListDao,
+        dataStoreDataSource: DataStoreDataSource,
+    ): PlayListDataSource {
+        return PlayListLocalDataSourceImpl(
+            playListDao = playListDao,
+            datastore = dataStoreDataSource,
+        )
     }
 
 }

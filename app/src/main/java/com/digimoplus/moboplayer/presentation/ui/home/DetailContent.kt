@@ -8,9 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.digimoplus.moboplayer.presentation.componnets.CircleSeekBar
 import com.digimoplus.moboplayer.presentation.componnets.ControllerButtons
 import com.digimoplus.moboplayer.presentation.componnets.MultiStyleText
@@ -48,9 +50,10 @@ fun DetailContent(viewModel: HomeViewModel) {
                     .fillMaxWidth(),
                 text = viewModel.currentMusicUi.title,
                 color = DarkGray,
-                style = MaterialTheme.typography.body1,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
                 maxLines = 1
             )
 
@@ -78,7 +81,10 @@ fun DetailContent(viewModel: HomeViewModel) {
         onPlayPauseClick = viewModel::playOrPauseMusic,
         onNext = viewModel::onNext,
         onPrevious = viewModel::onPrevious,
-        onPlayListChange = { viewModel.onPlayListChange(it) },
+        onPlayListStateChange = { viewModel.onPlayListStateChange(it) },
+        playList = viewModel.playLists,
+        currentPlayListIndex = viewModel.currentPlayListIndex,
+        onPlayListChange = { viewModel.onPlayListChange(it) }
     )
 }
 

@@ -30,4 +30,16 @@ object RepositoryModule {
         )
     }
 
+    @Provides
+    @Singleton
+    fun providePlayListRepository(
+        playListDataSource: PlayListDataSource,
+        musicsDataSource: MusicsDataSource,
+    ): PlayListRepository {
+        return PlayListRepositoryImpl(
+            playListDataSource = playListDataSource,
+            musicDataSource = musicsDataSource,
+        )
+    }
+
 }

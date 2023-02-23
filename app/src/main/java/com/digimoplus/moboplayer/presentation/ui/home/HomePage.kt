@@ -1,4 +1,8 @@
-@file:OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterialApi::class)
+@file:OptIn(
+    ExperimentalPermissionsApi::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalFoundationApi::class
+)
 
 package com.digimoplus.moboplayer.presentation.ui.home
 
@@ -6,7 +10,10 @@ import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,10 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.digimoplus.moboplayer.presentation.componnets.BottomSheetView
+import com.digimoplus.moboplayer.presentation.componnets.CustomAlertDialog
 import com.digimoplus.moboplayer.presentation.componnets.DrawerContent
 import com.digimoplus.moboplayer.presentation.componnets.LogoView
 import com.digimoplus.moboplayer.presentation.theme.LightWhite
 import com.digimoplus.moboplayer.presentation.theme.White
+import com.digimoplus.moboplayer.util.ModifyState
 import com.digimoplus.moboplayer.util.UiState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
@@ -35,6 +44,7 @@ fun HomePage() {
     val viewModel: HomeViewModel = hiltViewModel()
     val storagePermission = rememberPermissionState(Manifest.permission.READ_EXTERNAL_STORAGE)
     val coroutineScope = rememberCoroutineScope()
+    val pageState = rememberPagerState()
     val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberBottomSheetState(
             initialValue = BottomSheetValue.Collapsed,
@@ -42,40 +52,52 @@ fun HomePage() {
         )
     )
 
-    //ObserveBottomSheetFraction(scaffoldState, viewModel)
 
     // request for storage permission
     RequestPermission(viewModel, storagePermission)
 
     // handle back press
-    HandleBackPress(coroutineScope, scaffoldState)
+    HandleBackPress(viewModel, coroutineScope, scaffoldState)
 
     // main screen
     BottomSheetScaffold(
         modifier = Modifier.fillMaxSize(),
         sheetContent = {
-            if (viewModel.uiState == UiState.Success)
-                BottomSheetView(viewModel, scaffoldState, coroutineScope)
-        }, // set sheet content
+            if (viewModel.uiState == UiState.Success) BottomSheetView(
+                viewModel,
+                scaffoldState,
+                pageState
+            )
+        },
         drawerContent = { DrawerContent() },
         scaffoldState = scaffoldState,
-        sheetPeekHeight = 36.dp, // sheet height
+        sheetPeekHeight = if (viewModel.uiState == UiState.Loading) 0.dp else 36.dp,
+        sheetGesturesEnabled = viewModel.modifyState == ModifyState.None,
         backgroundColor = LightWhite,
         sheetBackgroundColor = White,
         sheetElevation = 0.dp,
     ) { innerPadding ->
 
-        // update ui
+
         when (viewModel.uiState) {
             UiState.Loading -> {
                 LogoView()
             }
             UiState.Success -> {
+
+                // update ui
                 Content(
                     innerPadding = innerPadding,
                     viewModel = viewModel,
                     scaffoldState = scaffoldState,
                     coroutineScope = coroutineScope,
+                    pagerState = pageState,
+                )
+
+                CustomAlertDialog(
+                    openDialog = viewModel.openRemoveDialog,
+                    onCancel = { viewModel.dialogOnCancel() },
+                    onDelete = { viewModel.dialogOnDelete() },
                 )
             }
             UiState.Error -> {
@@ -83,6 +105,7 @@ fun HomePage() {
             }
         }
     }
+
 }
 
 // screen content
@@ -92,6 +115,7 @@ private fun Content(
     innerPadding: PaddingValues,
     scaffoldState: BottomSheetScaffoldState,
     coroutineScope: CoroutineScope,
+    pagerState: PagerState,
 ) {
 
     Box(
@@ -115,7 +139,7 @@ private fun Content(
             if (scaffoldState.bottomSheetState.isCollapsed) {
                 DetailContent(viewModel = viewModel)
             } else {
-                MusicListContent(viewModel = viewModel)
+                PlayListsContent(viewModel = viewModel, pagerState = pagerState)
             }
 
         }
@@ -143,18 +167,27 @@ private fun RequestPermission(
 
 @Composable
 private fun HandleBackPress(
+    viewModel: HomeViewModel,
     coroutineScope: CoroutineScope,
     scaffoldState: BottomSheetScaffoldState,
 ) {
-    BackHandler(enabled = scaffoldState.drawerState.isOpen || scaffoldState.bottomSheetState.isCollapsed) {
+    BackHandler(
+        enabled = scaffoldState.drawerState.isOpen || scaffoldState.bottomSheetState.isCollapsed || viewModel.modifyState != ModifyState.None
+    ) {
         coroutineScope.launch {
-            if (scaffoldState.drawerState.isOpen) {
-                //close drawer
-                scaffoldState.drawerState.close()
-            } else {
-                // gone detail content
-                // expand bottom sheet
-                scaffoldState.bottomSheetState.expand()
+            when {
+                scaffoldState.drawerState.isOpen -> {
+                    //close drawer
+                    scaffoldState.drawerState.close()
+                }
+                viewModel.modifyState != ModifyState.None -> {
+                    viewModel.cancelModifying()
+                }
+                else -> {
+                    // gone detail content
+                    // expand bottom sheet
+                    scaffoldState.bottomSheetState.expand()
+                }
             }
         }
     }

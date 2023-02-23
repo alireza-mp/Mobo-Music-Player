@@ -4,7 +4,8 @@ import com.digimoplus.moboplayer.util.PlayListState
 
 interface DataStoreDataSource {
 
-    suspend fun getLastMusicTitle(): String
+    suspend fun getLastMusicId(): Int
+    suspend fun getLastPlayListId(): Int
 
     suspend fun getLastMusicDuration(): Long
 
@@ -15,7 +16,8 @@ interface DataStoreDataSource {
     suspend fun saveLastMusicData(
         duration: Long,
         currentPosition: Long,
-        musicTitle: String,
+        currentMusicId: Int,
+        currentPlayListId: Int,
     )
 
     suspend fun savePlayListState(

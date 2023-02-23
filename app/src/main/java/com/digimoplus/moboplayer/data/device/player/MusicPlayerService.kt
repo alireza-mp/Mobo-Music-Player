@@ -4,6 +4,9 @@ import android.app.*
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import com.digimoplus.moboplayer.data.device.player.notification.MusicNotificationActions
+import com.digimoplus.moboplayer.data.device.player.notification.MusicNotificationManager
+import com.digimoplus.moboplayer.data.device.player.notification.UpdateMusicNotificationListener
 import com.digimoplus.moboplayer.domain.repostiry.MusicsRepository
 import com.digimoplus.moboplayer.util.PlayListState
 import com.digimoplus.moboplayer.util.stopForeground
@@ -114,12 +117,14 @@ class MusicPlayerService : Service(), UpdateMusicNotificationListener {
         withContext(Dispatchers.Main) {
             val duration = exoPlayer.duration
             val currentPosition = exoPlayer.currentPosition
-            val musicTitle = exoPlayer.currentMediaItem?.mediaMetadata?.title?.toString() ?: "/*/"
+            val musicId = exoPlayer.currentMediaItem?.mediaId?.toInt() ?: 0
+            val currentPlayListId = musicPlayer.getCurrentPlayListId()
             withContext(Dispatchers.IO) {
-                musicsRepository.saveLastMusicData(
+                musicsRepository.saveLastData(
                     duration = duration,
                     currentPosition = currentPosition,
-                    musicTitle = musicTitle
+                    musicId = musicId,
+                    playListId = currentPlayListId,
                 )
                 musicsRepository.savePlayListState(musicPlayer.playListState)
             }

@@ -1,23 +1,18 @@
 package com.digimoplus.moboplayer.domain.repostiry
 
 import com.digimoplus.moboplayer.domain.models.LastDataStore
-import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.util.DataState
 import com.digimoplus.moboplayer.util.PlayListState
-import kotlinx.coroutines.flow.Flow
 
 interface MusicsRepository {
 
-    // get all musics in phone
-    suspend fun getAllMusicList(): Flow<DataState<List<Music>>>
+    suspend fun getLastDataStore(): DataState<LastDataStore>
 
-    //search for last music and return index in music list
-    suspend fun getLastDataStore(): Flow<DataState<LastDataStore>>
-
-    suspend fun saveLastMusicData(
+    suspend fun saveLastData(
         duration: Long,
         currentPosition: Long,
-        musicTitle: String,
+        musicId: Int,
+        playListId: Int,
     )
 
     suspend fun savePlayListState(

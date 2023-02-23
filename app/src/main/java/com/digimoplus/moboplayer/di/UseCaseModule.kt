@@ -1,10 +1,8 @@
 package com.digimoplus.moboplayer.di
 
 import com.digimoplus.moboplayer.domain.repostiry.MusicsRepository
-import com.digimoplus.moboplayer.domain.useCase.GetHomeViewStateUseCase
-import com.digimoplus.moboplayer.domain.useCase.GetLastDataStoreUseCase
-import com.digimoplus.moboplayer.domain.useCase.GetMusicsUseCase
-import com.digimoplus.moboplayer.domain.useCase.SaveLastMusicDataUseCase
+import com.digimoplus.moboplayer.domain.repostiry.PlayListRepository
+import com.digimoplus.moboplayer.domain.useCase.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,25 +20,44 @@ object UseCaseModule {
     }
 
     @Provides
-    fun provideGetMusicsUseCase(
-        musicsRepository: MusicsRepository,
-    ): GetMusicsUseCase {
-        return GetMusicsUseCase(musicsRepository)
+    fun provideGetPlayListUseCase(
+        playListRepository: PlayListRepository,
+    ): GetPlayListsUseCase {
+        return GetPlayListsUseCase(playListRepository)
     }
 
     @Provides
-    fun provideGetHomeViewState(
-        lastDataStoreUseCase: GetLastDataStoreUseCase,
-        musicsUseCase: GetMusicsUseCase,
-    ): GetHomeViewStateUseCase {
-        return GetHomeViewStateUseCase(lastDataStoreUseCase, musicsUseCase)
+    fun provideDeleteUseCase(
+        playListRepository: PlayListRepository,
+    ): DeletePlayListUseCase {
+        return DeletePlayListUseCase(playListRepository)
     }
 
     @Provides
-    fun provideSaveLastMuiscData(
-        musicsRepository: MusicsRepository,
-    ): SaveLastMusicDataUseCase {
-        return SaveLastMusicDataUseCase(musicsRepository)
+    fun provideAddNewPlayListUseCase(
+        playListRepository: PlayListRepository,
+    ): AddNewPlayListUseCase {
+        return AddNewPlayListUseCase(playListRepository)
+    }
+
+    @Provides
+    fun provideUpdateUseCase(
+        playListRepository: PlayListRepository,
+    ): UpdatePlayListUseCase {
+        return UpdatePlayListUseCase(playListRepository)
+    }
+
+    @Provides
+    fun provideModifyPlayListUseCase(
+        addNewPlayListUseCase: AddNewPlayListUseCase,
+        updatePlayListUseCase: UpdatePlayListUseCase,
+        deletePlayListUseCase: DeletePlayListUseCase,
+    ): ModifyPlayListUseCase {
+        return ModifyPlayListUseCase(
+            addNewPlayListUseCase = addNewPlayListUseCase,
+            updatePlayListUseCase = updatePlayListUseCase,
+            deletePlayListUseCase = deletePlayListUseCase,
+        )
     }
 
 }

@@ -6,11 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -18,8 +17,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.digimoplus.moboplayer.R
+import com.digimoplus.moboplayer.domain.models.PlayListItem
 import com.digimoplus.moboplayer.presentation.theme.DarkGray
+import com.digimoplus.moboplayer.presentation.theme.LightGray
 import com.digimoplus.moboplayer.util.PlayListState
 
 @ExperimentalMaterialApi
@@ -28,11 +30,19 @@ fun ControllerButtons(
     isPlayIng: Boolean,
     alpha: Float,
     playListState: PlayListState,
+    playList: List<PlayListItem>,
+    currentPlayListIndex: Int,
     onPlayPauseClick: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
-    onPlayListChange: (PlayListState) -> Unit,
+    onPlayListChange: (index: Int) -> Unit,
+    onPlayListStateChange: (PlayListState) -> Unit,
 ) {
+
+    val expandedPlayLists = remember {
+        mutableStateOf(false)
+    }
+
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -49,13 +59,13 @@ fun ControllerButtons(
                     // update state
                     when (playListState) {
                         PlayListState.CURRENT -> {
-                            onPlayListChange(PlayListState.SHUFFLE)
+                            onPlayListStateChange(PlayListState.SHUFFLE)
                         }
                         PlayListState.SHUFFLE -> {
-                            onPlayListChange(PlayListState.LOOP)
+                            onPlayListStateChange(PlayListState.LOOP)
                         }
                         PlayListState.LOOP -> {
-                            onPlayListChange(PlayListState.CURRENT)
+                            onPlayListStateChange(PlayListState.CURRENT)
                         }
                     }
                 },
@@ -137,11 +147,47 @@ fun ControllerButtons(
                 )
             }
         }
+
+        // play list button
         Box(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.CenterStart,
         ) {
-            //  button
+
+            IconButton(onClick = {
+                expandedPlayLists.value = true
+            }) {
+                Image(
+                    modifier = Modifier.size(26.dp),
+                    painter = painterResource(id = R.drawable.ic_play_list),
+                    contentDescription = null,
+                )
+            }
+
+            // drop down menu
+            DropdownMenu(
+                expanded = expandedPlayLists.value,
+                onDismissRequest = {
+                    expandedPlayLists.value = false
+                }
+            ) {
+                playList.forEachIndexed { itemIndex, itemValue ->
+                    if (itemIndex != playList.size - 1) {
+                        DropdownMenuItem(
+                            onClick = {
+                                expandedPlayLists.value = false
+                                onPlayListChange(itemIndex)
+                            },
+                        ) {
+                            Text(
+                                text = itemValue.title,
+                                color = if (currentPlayListIndex == itemIndex) DarkGray else LightGray,
+                                fontSize = 14.sp,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

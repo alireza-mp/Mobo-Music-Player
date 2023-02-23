@@ -1,12 +1,17 @@
 package com.digimoplus.moboplayer.data.dataSource
 
 import com.CodeBoy.MediaFacer.mediaHolders.audioContent
+import com.digimoplus.moboplayer.data.db.model.MusicEntity
 
 interface MusicsDataSource {
 
-    // get all musics list
-    suspend fun getAllMusicLists(): List<audioContent>?
+    suspend fun getAllMusicList(): List<audioContent>?
 
-    // get last music index in list
-    suspend fun getLastMusicIndex(): Int
+    suspend fun getLastMusicId(): Int
+
+    suspend fun addMusics(musicList: List<MusicEntity>)
+
+    suspend fun getPlayListMusics(): List<MusicEntity>?
+
+    suspend fun deleteMusicsByPId(pid: Int)
 }

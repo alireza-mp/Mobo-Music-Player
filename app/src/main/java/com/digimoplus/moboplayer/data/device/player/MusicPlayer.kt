@@ -1,7 +1,12 @@
 package com.digimoplus.moboplayer.data.device.player
 
+import com.digimoplus.moboplayer.data.device.player.model.PlayerPlayList
+import com.digimoplus.moboplayer.data.device.player.model.mapToDomainModel
+import com.digimoplus.moboplayer.data.device.player.notification.UpdateMusicNotificationListener
 import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music
+import com.digimoplus.moboplayer.domain.models.PlayListItem
+import com.digimoplus.moboplayer.domain.models.mapToMusicPlayerModel
 import com.digimoplus.moboplayer.util.*
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -11,16 +16,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class MusicPlayer
-@Inject
-constructor(
+@Inject constructor(
     private val exoPlayer: ExoPlayer,
 ) : MusicServiceChangeListener {
 
     private var uiListener: MusicPlayerUiListener? = null
     private var updateNotification: UpdateMusicNotificationListener? = null
+    private lateinit var currentPlayList: PlayerPlayList
     var playListState: PlayListState = PlayListState.CURRENT
         private set
 
@@ -37,18 +43,18 @@ constructor(
         uiListener?.updateCurrentMusic(mediaItemToMusic(mediaItem))
     }
 
-    fun initialData(
-        musicList: List<Music>,
+    suspend fun initialData(
+        playLists: List<PlayListItem>,
         lastData: LastDataStore,
         musicPlayerUiListener: MusicPlayerUiListener,
     ) {
         this.uiListener = musicPlayerUiListener
 
-        if (musicList.isNotEmpty()) {
+        if (playLists.isNotEmpty()) {
             // check media player in service is exist or not
             if (exoPlayer.mediaItemCount == 0) { // if media player PlayList is empty
 
-                setMediaPlayerData(musicList, lastData)
+                setMediaPlayerData(playLists, lastData)
 
             } else { // media player playList not empty
 
@@ -58,13 +64,32 @@ constructor(
         }
     }
 
-    private fun setMediaPlayerData(musicList: List<Music>, lastData: LastDataStore) {
+    private suspend fun setMediaPlayerData(playLists: List<PlayListItem>, lastData: LastDataStore) {
+        withContext(Dispatchers.IO) {
+            val playerList = playLists.map { it.mapToMusicPlayerModel() }
+            currentPlayList = try {
+                playerList.find { it.id == lastData.lastPlayListId } ?: playerList[0]
+            } catch (e: Exception) {
+                playerList[0]
+            }
+        }
+        // find playlist index
+
+        val musicList = currentPlayList.musics
+        // find music index
+        val mIndex = try {
+            withContext(Dispatchers.IO) {
+                musicList.withIndex().first { it.value.id.toInt() == lastData.lastMusicId }.index
+            }
+        } catch (e: Exception) {
+            -1
+        }
         // add music list ot media player playList
         exoPlayer.addMediaItems(musicToMediaList(musicList))
 
         // update media player with last music in dataStore
-        if (lastData.lastMusicIndex != -1) {
-            exoPlayer.seekTo(lastData.lastMusicIndex, lastData.currentPosition)
+        if (mIndex != -1) {
+            exoPlayer.seekTo(mIndex, lastData.currentPosition)
             // update ui duration and percentage
             uiListener?.updateUiByPlayerState(
                 percentage = convertPositionToPercentageNotSuspend(
@@ -73,6 +98,7 @@ constructor(
                 ),
                 duration = convertMilliSecondsToSecond(lastData.currentPosition),
                 playListState = lastData.playListState,
+                currentPlayList = currentPlayList.mapToDomainModel(),
             )
         }
         updatePlayListState(lastData.playListState)
@@ -90,7 +116,8 @@ constructor(
                 currentPosition = exoPlayer.currentPosition,
             ),
             duration = convertMilliSecondsToSecond(exoPlayer.currentPosition),
-            playListState = playListState
+            playListState = playListState,
+            currentPlayList = currentPlayList.mapToDomainModel(),
         )
         uiListener?.updateCurrentMusic(mediaItemToMusic(exoPlayer.currentMediaItem))
     }
@@ -162,8 +189,7 @@ constructor(
             if (exoPlayer.duration > 0 && exoPlayer.isPlaying) {
                 trySend(
                     convertPositionToPercentage(
-                        duration = exoPlayer.duration,
-                        currentPosition = exoPlayer.currentPosition
+                        duration = exoPlayer.duration, currentPosition = exoPlayer.currentPosition
                     )
                 )
             }
@@ -218,17 +244,19 @@ constructor(
         }
     }
 
-    // on music item clicked
-    fun onItemClick(index: Int) {
-        // check if current music is clicked or not
-        if (exoPlayer.currentMediaItemIndex != index) {
-            exoPlayer.seekTo(index, 0)
-            //play music
-            if (!exoPlayer.isPlaying) {
-                exoPlayer.prepare()
-                exoPlayer.play()
-            }
+
+    suspend fun seekToIndex(playListItem: PlayListItem, music: Music) {
+        val item = playListItem.mapToMusicPlayerModel()
+        val musicIndex = withContext(Dispatchers.IO) {
+            item.musics.indexOf(music)
         }
+
+        if (item != currentPlayList) {
+            changePlayList(playListItem, musicIndex)
+        } else {
+            seekToItemIndex(item, musicIndex)
+        }
+
     }
 
     fun removeNotification() {
@@ -239,5 +267,46 @@ constructor(
     fun setUpdateNotification(listener: UpdateMusicNotificationListener) {
         this.updateNotification = listener
     }
+
+    fun changePlayList(playListItem: PlayListItem) {
+        val item = playListItem.mapToMusicPlayerModel()
+        val isPlaying = exoPlayer.isPlaying
+        currentPlayList = item
+        if (exoPlayer.isPlaying) exoPlayer.pause()
+        exoPlayer.clearMediaItems()
+        exoPlayer.addMediaItems(musicToMediaList(item.musics))
+        exoPlayer.seekTo(0, 0)
+        uiListener?.updateCurrentPlayList(item.mapToDomainModel())
+        exoPlayer.prepare()
+        if (isPlaying) {
+            exoPlayer.play()
+        }
+    }
+
+    private fun seekToItemIndex(playListItem: PlayerPlayList, musicIndex: Int) {
+        val currentItemIndex = exoPlayer.currentMediaItem?.mediaId?.toLong()
+        if (currentItemIndex != null && currentItemIndex != playListItem.musics[musicIndex].id) {
+            exoPlayer.seekTo(musicIndex, 0)
+            //play music
+            if (!exoPlayer.isPlaying) {
+                exoPlayer.prepare()
+                exoPlayer.play()
+            }
+        }
+    }
+
+    private fun changePlayList(playListItem: PlayListItem, musicIndex: Int) {
+        val item = playListItem.mapToMusicPlayerModel()
+        currentPlayList = item
+        if (exoPlayer.isPlaying) exoPlayer.pause()
+        exoPlayer.clearMediaItems()
+        exoPlayer.addMediaItems(musicToMediaList(item.musics))
+        exoPlayer.seekTo(musicIndex, 0)
+        uiListener?.updateCurrentPlayList(currentPlayList.mapToDomainModel())
+        exoPlayer.prepare()
+        exoPlayer.play()
+    }
+
+    fun getCurrentPlayListId(): Int = currentPlayList.id
 
 }

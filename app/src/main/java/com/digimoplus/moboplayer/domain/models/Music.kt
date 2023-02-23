@@ -2,7 +2,9 @@ package com.digimoplus.moboplayer.domain.models
 
 import android.net.Uri
 import com.CodeBoy.MediaFacer.mediaHolders.audioContent
+import com.digimoplus.moboplayer.data.db.model.MusicEntity
 import com.digimoplus.moboplayer.util.convertMilliSecondsToSecond
+import com.digimoplus.moboplayer.util.getFileLastModified
 
 data class Music(
     var id: Long = -1,
@@ -12,20 +14,27 @@ data class Music(
     var duration: String = "null",
     val imageUri: Uri? = null,
     val musicUri: String? = null,
-    val isPlayed: Boolean = false,
+    val dateModified: String = "",
+    var isChecked: Boolean = false,
 )
 
-suspend fun mapToDomainModel(model: audioContent): Music {
+fun audioContent.mapToDomainModel(): Music {
     return Music(
-        id = model.musicID,
-        artist = model.artist,
-        title = model.title,
-        path = model.filePath,
-        duration = convertMilliSecondsToSecond(model.duration),
-        musicUri = model.assetFileStringUri,
-        imageUri = model.art_uri
+        id = this.musicID,
+        artist = this.artist,
+        title = this.title,
+        path = this.filePath,
+        duration = convertMilliSecondsToSecond(this.duration),
+        musicUri = this.assetFileStringUri,
+        imageUri = this.art_uri,
+        dateModified = getFileLastModified(this.filePath),
     )
 }
 
-
-
+fun Music.mapToEntityModel(pId: Int): MusicEntity {
+    return MusicEntity(
+        id = 0,
+        pId = pId,
+        title = this.title,
+    )
+}
