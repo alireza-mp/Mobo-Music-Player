@@ -1,8 +1,9 @@
-package com.digimoplus.moboplayer.data.device.player
+package com.digimoplus.moboplayer.data.device.player.notification
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.digimoplus.moboplayer.data.device.player.MusicPlayer
 import com.digimoplus.moboplayer.util.PlayListState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

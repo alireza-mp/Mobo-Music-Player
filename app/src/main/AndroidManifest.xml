@@ -37,7 +37,7 @@
         </activity>
 
         <receiver
-            android:name=".data.device.player.MusicNotificationReceiver"
+            android:name=".data.device.player.notification.MusicNotificationReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

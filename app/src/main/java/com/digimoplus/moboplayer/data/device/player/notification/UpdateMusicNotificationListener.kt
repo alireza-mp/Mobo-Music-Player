@@ -1,4 +1,4 @@
-package com.digimoplus.moboplayer.data.device.player
+package com.digimoplus.moboplayer.data.device.player.notification
 
 import com.digimoplus.moboplayer.util.PlayListState
 

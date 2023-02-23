@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterialApi::class, DelicateCoroutinesApi::class)
 
-package com.digimoplus.moboplayer.data.device.player
+package com.digimoplus.moboplayer.data.device.player.notification
 
 
 import android.annotation.SuppressLint
@@ -12,15 +12,14 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.MediaMetadata
-import android.os.Build
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.annotation.RequiresApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.core.app.NotificationCompat
 import androidx.media.session.MediaButtonReceiver
 import com.digimoplus.moboplayer.R
+import com.digimoplus.moboplayer.data.device.player.MusicPlayer
 import com.digimoplus.moboplayer.presentation.ui.mainactivity.MainActivity
 import com.digimoplus.moboplayer.util.PlayListState
 import com.digimoplus.moboplayer.util.convertMinuteToMilliSeconds
