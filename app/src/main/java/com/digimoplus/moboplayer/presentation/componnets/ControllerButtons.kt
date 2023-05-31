@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
+
 package com.digimoplus.moboplayer.presentation.componnets
 
 import androidx.compose.foundation.Image
@@ -16,6 +18,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.digimoplus.moboplayer.R
@@ -24,7 +27,6 @@ import com.digimoplus.moboplayer.presentation.theme.DarkGray
 import com.digimoplus.moboplayer.presentation.theme.LightGray
 import com.digimoplus.moboplayer.util.PlayListState
 
-@ExperimentalMaterialApi
 @Composable
 fun ControllerButtons(
     isPlayIng: Boolean,
@@ -61,9 +63,11 @@ fun ControllerButtons(
                         PlayListState.CURRENT -> {
                             onPlayListStateChange(PlayListState.SHUFFLE)
                         }
+
                         PlayListState.SHUFFLE -> {
                             onPlayListStateChange(PlayListState.LOOP)
                         }
+
                         PlayListState.LOOP -> {
                             onPlayListStateChange(PlayListState.CURRENT)
                         }
@@ -78,9 +82,11 @@ fun ControllerButtons(
                             PlayListState.CURRENT -> {
                                 R.drawable.ic_current
                             }
+
                             PlayListState.SHUFFLE -> {
                                 R.drawable.ic_shuffle
                             }
+
                             PlayListState.LOOP -> {
                                 R.drawable.ic_repeat
                             }
@@ -190,4 +196,21 @@ fun ControllerButtons(
             }
         }
     }
+}
+
+@Preview(showBackground = true, heightDp = 150)
+@Composable
+fun DefaultPreview() {
+    ControllerButtons(
+        isPlayIng = false,
+        alpha = 1f,
+        playListState = PlayListState.CURRENT,
+        playList = listOf(),
+        currentPlayListIndex = 0,
+        onPlayPauseClick = { /*TODO*/ },
+        onNext = { /*TODO*/ },
+        onPrevious = { /*TODO*/ },
+        onPlayListChange = { },
+        onPlayListStateChange = {}
+    )
 }

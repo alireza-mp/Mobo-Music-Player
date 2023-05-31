@@ -148,7 +148,9 @@ class MusicPlayerService : Service(), UpdateMusicNotificationListener {
 
     override fun updatePlayListState(state: PlayListState) {
         val builder = musicNotificationManager.updatePlayList(state)
-        startForeground(MusicNotificationActions.NOTIFICATION_ID, builder.build())
+        builder?.let {
+            startForeground(MusicNotificationActions.NOTIFICATION_ID, builder.build())
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)

@@ -16,12 +16,15 @@ import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.digimoplus.moboplayer.R
+import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.presentation.ui.home.HomeViewModel
 import kotlinx.coroutines.launch
 
 // fade in image composable
 @Composable
-fun FadeInImage(viewModel: HomeViewModel) {
+fun FadeInImage(
+    currentMusic: Music,
+) {
     // image uri
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     // alpha animation
@@ -30,9 +33,9 @@ fun FadeInImage(viewModel: HomeViewModel) {
     val painter = rememberAsyncImagePainter(imageUri.value)
 
     // listening to change current music
-    LaunchedEffect(key1 = viewModel.currentMusicUi.imageUri) {
+    LaunchedEffect(key1 = currentMusic.imageUri) {
         alpha.snapTo(0f) // gone image view
-        imageUri.value = viewModel.currentMusicUi.imageUri //after image gone load image
+        imageUri.value = currentMusic.imageUri //after image gone load image
     }
 
     // loading state
@@ -50,6 +53,7 @@ fun FadeInImage(viewModel: HomeViewModel) {
                         )
                     )
                 }
+
                 else -> {} // loading state
             }
         }

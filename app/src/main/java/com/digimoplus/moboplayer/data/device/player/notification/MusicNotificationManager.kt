@@ -220,7 +220,7 @@ constructor(
     }
 
     @SuppressLint("RestrictedApi")
-    fun updatePlayList(playListState: PlayListState): NotificationCompat.Builder {
+    fun updatePlayList(playListState: PlayListState): NotificationCompat.Builder? {
         when (playListState) {
             PlayListState.CURRENT -> {
                 notificationBuilder?.mActions?.set(0, currentListAction)
@@ -232,7 +232,7 @@ constructor(
                 notificationBuilder?.mActions?.set(0, loopAction)
             }
         }
-        return notificationBuilder!!
+        return notificationBuilder
     }
 
     private fun updateNotificationItem(

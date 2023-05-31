@@ -11,59 +11,77 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.digimoplus.moboplayer.domain.models.Music
+import com.digimoplus.moboplayer.domain.models.PlayListItem
 import com.digimoplus.moboplayer.presentation.componnets.AddNewPlayListItem
 import com.digimoplus.moboplayer.presentation.componnets.AllPlayListItem
 import com.digimoplus.moboplayer.presentation.componnets.EditablePlayListItem
 import com.digimoplus.moboplayer.presentation.componnets.TitlePlayListItem
 import com.digimoplus.moboplayer.util.ModifyState
+import com.digimoplus.moboplayer.util.MusicState
+import com.digimoplus.moboplayer.util.Sort
 import kotlinx.coroutines.launch
 
 @Composable
 fun PlayListsContent(
-    viewModel: HomeViewModel,
+    playLists: List<PlayListItem>,
+    currentPlayListIndex: Int,
+    modifyState: ModifyState,
     pagerState: PagerState,
+    sortState: Sort,
+    musicUiState: MusicState,
+    currentMusic: Music,
+    onSortClick: () -> Unit,
+    onItemClick: (playListIndex: Int, musicIndex: Int) -> Unit,
+    onMusicCheckedChange: (playListIndex: Int, musicIndex: Int) -> Unit,
+    onOpenDialog: (playListIndex: Int) -> Unit,
+    onEditPlayListClick: (playListIndex: Int) -> Unit,
 ) {
 
     Column {
         TitleList(
-            viewModel = viewModel,
+            playLists = playLists,
+            currentPlayListIndex = currentPlayListIndex,
+            modifyState = modifyState,
             pagerState = pagerState,
         )
 
         HorizontalPager(
             state = pagerState,
-            userScrollEnabled = viewModel.modifyState == ModifyState.None,
+            userScrollEnabled = modifyState == ModifyState.None,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = 64.dp), // padding for bottom sheet height
-            pageCount = viewModel.playLists.size,
+            pageCount = playLists.size,
         ) { playListIndex ->
             when (playListIndex) {
 
                 0 -> {
-                    AllPlayListItem(musics = viewModel.playLists[playListIndex].musics,
-                        sort = viewModel.sortState,
-                        musicUiState = viewModel.musicUIState,
-                        currentMusic = viewModel.currentMusicUi,
-                        onSortClick = viewModel::onSortChange,
+                    AllPlayListItem(
+                        musics = playLists[playListIndex].musics,
+                        sort = sortState,
+                        musicUiState = musicUiState,
+                        currentMusic = currentMusic,
+                        onSortClick = onSortClick,
                         onItemClick = { musicIndex ->
-                            viewModel.onItemClick(
-                                playlistIndex = playListIndex,
-                                musicIndex = musicIndex,
+                            onItemClick(
+                                playListIndex,
+                                musicIndex,
                             )
-                        })
+                        },
+                    )
 
                 }
 
-                viewModel.playLists.size - 1 -> {
+                playLists.size - 1 -> {
                     AddNewPlayListItem(
-                        sort = viewModel.sortState,
-                        musics = viewModel.playLists[playListIndex].musics,
-                        onSortClick = viewModel::onSortChange,
+                        sort = sortState,
+                        musics = playLists[playListIndex].musics,
+                        onSortClick = onSortClick,
                         onItemClick = { musicIndex ->
-                            viewModel.onMusicCheckedChange(
-                                playListIndex = viewModel.playLists.size - 1,
-                                musicIndex = musicIndex,
+                            onMusicCheckedChange(
+                                playLists.size - 1,
+                                musicIndex,
                             )
                         },
                     )
@@ -71,24 +89,24 @@ fun PlayListsContent(
 
                 else -> {
                     EditablePlayListItem(
-                        musics = viewModel.playLists[playListIndex].musics,
-                        sort = viewModel.sortState,
-                        musicUiState = viewModel.musicUIState,
-                        currentMusic = viewModel.currentMusicUi,
-                        onSortClick = viewModel::onSortChange,
-                        modifyState = viewModel.modifyState,
-                        onRemoveClick = { viewModel.onOpenDialog(playListIndex) },
-                        onEditClick = { viewModel.onEditPlayListClick(playListIndex) },
-                        onCheckClick = { index ->
-                            viewModel.onMusicCheckedChange(
-                                playListIndex = playListIndex,
-                                musicIndex = index,
+                        musics = playLists[playListIndex].musics,
+                        sort = sortState,
+                        musicUiState = musicUiState,
+                        currentMusic = currentMusic,
+                        onSortClick = onSortClick,
+                        modifyState = modifyState,
+                        onRemoveClick = { onOpenDialog(playListIndex) },
+                        onEditClick = { onEditPlayListClick(playListIndex) },
+                        onCheckClick = { musicIndex ->
+                            onMusicCheckedChange(
+                                playListIndex,
+                                musicIndex,
                             )
                         },
                         onItemClick = { musicIndex ->
-                            viewModel.onItemClick(
-                                playlistIndex = playListIndex,
-                                musicIndex = musicIndex,
+                            onItemClick(
+                                playListIndex,
+                                musicIndex,
                             )
                         },
                     )
@@ -102,7 +120,9 @@ fun PlayListsContent(
 
 @Composable
 private fun TitleList(
-    viewModel: HomeViewModel,
+    playLists: List<PlayListItem>,
+    currentPlayListIndex: Int,
+    modifyState: ModifyState,
     pagerState: PagerState,
 ) {
 
@@ -116,16 +136,16 @@ private fun TitleList(
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        itemsIndexed(items = viewModel.playLists, key = { _, item -> item.id }) { index, model ->
+        itemsIndexed(items = playLists, key = { _, item -> item.id }) { index, model ->
             TitlePlayListItem(
                 model = model,
                 index = index,
                 selectedIndex = selectedIndex.value,
-                currentPlayList = viewModel.currentPlayListIndex,
-                playListsSize = viewModel.playLists.size,
+                currentPlayList = currentPlayListIndex,
+                playListsSize = playLists.size,
                 onItemClick = {
                     coroutineScope.launch {
-                        if (viewModel.modifyState == ModifyState.None) { // check add new playlist state
+                        if (modifyState == ModifyState.None) { // check add new playlist state
                             pagerState.animateScrollToPage(index)
                         }
                     }

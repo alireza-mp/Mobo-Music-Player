@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.ExperimentalMaterialApi
 import com.digimoplus.moboplayer.presentation.theme.MusicApplicationTheme
-import com.digimoplus.moboplayer.presentation.ui.home.HomePage
+import com.digimoplus.moboplayer.presentation.ui.home.HomeRoute
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         setAppLanguage(this)
         setContent {
             MusicApplicationTheme {
-                HomePage()
+                HomeRoute()
             }
         }
     }
