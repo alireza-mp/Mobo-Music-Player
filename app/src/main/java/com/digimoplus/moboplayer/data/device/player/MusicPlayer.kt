@@ -7,7 +7,11 @@ import com.digimoplus.moboplayer.domain.models.LastDataStore
 import com.digimoplus.moboplayer.domain.models.Music
 import com.digimoplus.moboplayer.domain.models.PlayListItem
 import com.digimoplus.moboplayer.domain.models.mapToMusicPlayerModel
-import com.digimoplus.moboplayer.util.*
+import com.digimoplus.moboplayer.util.PlayListState
+import com.digimoplus.moboplayer.util.convertMilliSecondsToSecond
+import com.digimoplus.moboplayer.util.convertPercentageToMilliSeconds
+import com.digimoplus.moboplayer.util.convertPositionToPercentage
+import com.digimoplus.moboplayer.util.convertPositionToPercentageNotSuspend
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -146,10 +150,12 @@ class MusicPlayer
                 exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
                 exoPlayer.shuffleModeEnabled = false
             }
+
             PlayListState.SHUFFLE -> {
                 exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
                 exoPlayer.shuffleModeEnabled = true
             }
+
             PlayListState.LOOP -> {
                 exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
                 exoPlayer.shuffleModeEnabled = false

@@ -12,6 +12,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.MediaMetadata
+import android.os.Build
+import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
@@ -41,6 +43,7 @@ constructor(
     private var notificationBuilder: NotificationCompat.Builder? = null
     private lateinit var mediaSession: MediaSessionCompat
 
+    private var notificationStateHolder = MusicNotificationStateHolder()
 
     private val playIntent: Intent = Intent(context, MusicNotificationReceiver::class.java)
         .setAction(MusicNotificationActions.ACTION_PLAY)
@@ -171,29 +174,71 @@ constructor(
         initMediaSession(context)
         updateSeekBarPosition()
         mediaSession.setMetadata(createNotificationMetadata(mediaItem))
-        mediaSession.setPlaybackState(
-            PlaybackStateCompat.Builder()
-                .setState(
-                    PlaybackStateCompat.STATE_PAUSED,
-                    0,
-                    0f
-                )
-                .setActions(PlaybackStateCompat.ACTION_SEEK_TO)
-                .build()
-        )
+        // init
+        mediaSession.setPlaybackState(getPlayBackState(notificationStateHolder))
 
-        mediaSession.setCallback(object : MediaSessionCompat.Callback() {
-            override fun onSeekTo(pos: Long) {
-                super.onSeekTo(pos)
-                musicPlayer.seekTo(pos)
-            }
-        })
+
+        mediaSession.setCallback(
+            object : MediaSessionCompat.Callback() {
+                override fun onSeekTo(pos: Long) {
+                    super.onSeekTo(pos)
+                    musicPlayer.seekTo(pos)
+                }
+
+                override fun onPlay() {
+                    super.onPlay()
+                    musicPlayer.play()
+                }
+
+                override fun onPause() {
+                    super.onPause()
+                    musicPlayer.pause()
+                }
+
+                override fun onSkipToNext() {
+                    super.onSkipToNext()
+                    musicPlayer.onNext()
+                }
+
+                override fun onSkipToPrevious() {
+                    super.onSkipToPrevious()
+                    musicPlayer.onPrevious()
+                }
+
+                override fun onCustomAction(action: String?, extras: Bundle?) {
+                    action?.let {
+                        when (action) {
+                            MusicNotificationActions.ACTION_SHUFFLE ->
+                                musicPlayer.updatePlayListState(PlayListState.LOOP)
+
+                            MusicNotificationActions.ACTION_LOOP ->
+                                musicPlayer.updatePlayListState(PlayListState.CURRENT)
+
+                            MusicNotificationActions.ACTION_CURRENT_PLAYLIST ->
+                                musicPlayer.updatePlayListState(PlayListState.SHUFFLE)
+
+                            MusicNotificationActions.ACTION_REMOVE ->
+                                musicPlayer.removeNotification()
+
+                            else -> super.onCustomAction(action, extras)
+                        }
+                    } ?: super.onCustomAction(null, extras)
+                }
+            },
+        )
 
         val mediaStyle =
             androidx.media.app.NotificationCompat.MediaStyle()
                 .setMediaSession(mediaSession.sessionToken)
 
-        notificationBuilder = NotificationCompat.Builder(
+        notificationBuilder = initNotificationBuilder(mediaStyle)
+
+    }
+
+    private fun initNotificationBuilder(
+        mediaStyle: androidx.media.app.NotificationCompat.MediaStyle,
+    ): NotificationCompat.Builder {
+        val builder = NotificationCompat.Builder(
             context,
             MusicNotificationActions.NOTIFICATION_CHANEL_ID
         )
@@ -202,35 +247,51 @@ constructor(
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOnlyAlertOnce(true)
             .setContentIntent(contentPendingIntent)
-            .addAction(currentListAction)
-            .addAction(R.drawable.ic_notification_previous, "previous", previousPendingIntent)
-            .addAction(playAction)
-            .addAction(R.drawable.ic_notification_next, "next", nextPendingIntent)
-            .addAction(
-                com.ehsanmsz.mszprogressindicator.R.drawable.ic_m3_chip_close,
-                "close",
-                removePendingIntent
-            )
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            builder.addAction(currentListAction)
+                .addAction(R.drawable.ic_notification_previous, "previous", previousPendingIntent)
+                .addAction(playAction)
+                .addAction(R.drawable.ic_notification_next, "next", nextPendingIntent)
+                .addAction(
+                    com.ehsanmsz.mszprogressindicator.R.drawable.ic_m3_chip_close,
+                    "close",
+                    removePendingIntent
+                )
+        }
+        return builder
     }
 
     @SuppressLint("RestrictedApi")
     fun updatePlaying(isPlay: Boolean): NotificationCompat.Builder {
-        notificationBuilder?.mActions?.set(2, if (isPlay) pauseAction else playAction)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            notificationBuilder?.mActions?.set(2, if (isPlay) pauseAction else playAction)
+        } else {
+            notificationStateHolder = notificationStateHolder.copy(isPlaying = isPlay)
+            mediaSession.setPlaybackState(getPlayBackState(notificationStateHolder))
+        }
         return notificationBuilder!!
     }
 
     @SuppressLint("RestrictedApi")
     fun updatePlayList(playListState: PlayListState): NotificationCompat.Builder? {
-        when (playListState) {
-            PlayListState.CURRENT -> {
-                notificationBuilder?.mActions?.set(0, currentListAction)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            when (playListState) {
+                PlayListState.CURRENT -> {
+                    notificationBuilder?.mActions?.set(0, currentListAction)
+                }
+
+                PlayListState.SHUFFLE -> {
+                    notificationBuilder?.mActions?.set(0, shuffleAction)
+                }
+
+                PlayListState.LOOP -> {
+                    notificationBuilder?.mActions?.set(0, loopAction)
+                }
             }
-            PlayListState.SHUFFLE -> {
-                notificationBuilder?.mActions?.set(0, shuffleAction)
-            }
-            PlayListState.LOOP -> {
-                notificationBuilder?.mActions?.set(0, loopAction)
-            }
+        } else {
+            notificationStateHolder = notificationStateHolder.copy(playListState = playListState)
+            mediaSession.setPlaybackState(getPlayBackState(notificationStateHolder))
         }
         return notificationBuilder
     }
@@ -240,36 +301,32 @@ constructor(
     ) {
 
         mediaSession.setMetadata(createNotificationMetadata(mediaItem))
-
-        mediaSession.setPlaybackState(
-            PlaybackStateCompat.Builder()
-                .setState(
-                    PlaybackStateCompat.STATE_PAUSED,
-                    0,
-                    0f
-                )
-                .setActions(PlaybackStateCompat.ACTION_SEEK_TO)
-                .build()
-        )
-
+        notificationStateHolder = notificationStateHolder.copy(position = 0)
+        mediaSession.setPlaybackState(getPlayBackState(notificationStateHolder))
 
     }
 
     private fun updateSeekBar(
         position: Long,
     ) {
-        mediaSession.setPlaybackState(
-            PlaybackStateCompat.Builder()
-                .setState(
-                    PlaybackStateCompat.STATE_PLAYING,
-                    position,
-                    0f
-                )
-                .setActions(PlaybackStateCompat.ACTION_SEEK_TO)
-                .build()
-        )
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            mediaSession.setPlaybackState(
+                PlaybackStateCompat.Builder()
+                    .setState(
+                        PlaybackStateCompat.STATE_PLAYING,
+                        position,
+                        0f
+                    )
+                    .setActions(PlaybackStateCompat.ACTION_SEEK_TO)
+                    .build()
+            )
+        } else {
+            notificationStateHolder = notificationStateHolder.copy(position = position)
+            mediaSession.setPlaybackState(
+                getPlayBackState(notificationStateHolder)
+            )
+        }
     }
-
 
     private fun initMediaSession(
         context: Context,
@@ -322,6 +379,58 @@ constructor(
                 convertMinuteToMilliSeconds(mediaItem.description.toString())
             )
             .build()
+    }
+
+
+    private fun getPlayBackState(
+        state: MusicNotificationStateHolder,
+    ): PlaybackStateCompat {
+        val playListAction = when (state.playListState) {
+            PlayListState.SHUFFLE -> PlaybackStateCompat.CustomAction.Builder(
+                MusicNotificationActions.ACTION_SHUFFLE,
+                "shuffle",
+                R.drawable.ic_shuffle
+            )
+
+            PlayListState.LOOP -> PlaybackStateCompat.CustomAction.Builder(
+                MusicNotificationActions.ACTION_LOOP,
+                "loop",
+                R.drawable.ic_repeat_notification,
+            )
+
+            PlayListState.CURRENT -> PlaybackStateCompat.CustomAction.Builder(
+                MusicNotificationActions.ACTION_CURRENT_PLAYLIST,
+                "current",
+                R.drawable.ic_current_notification,
+            )
+        }
+
+        val closeAction = PlaybackStateCompat.CustomAction.Builder(
+            MusicNotificationActions.ACTION_REMOVE,
+            "remove",
+            com.ehsanmsz.mszprogressindicator.R.drawable.ic_m3_chip_close
+        )
+        val builder = PlaybackStateCompat.Builder()
+            .setActions(
+                PlaybackStateCompat.ACTION_SEEK_TO or
+                        PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS,
+            )
+            // playlistAction
+            .addCustomAction(
+                playListAction.build()
+            )
+            //close action
+            .addCustomAction(
+                closeAction.build()
+            )
+            .setState(
+                if (state.isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
+                state.position,
+                0f,
+            )
+        return builder.build()
     }
 
 }
