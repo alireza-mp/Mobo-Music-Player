@@ -12,10 +12,20 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.BottomSheetScaffoldState
+import androidx.compose.material.BottomSheetValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
@@ -30,7 +40,6 @@ import com.digimoplus.moboplayer.presentation.componnets.LogoView
 import com.digimoplus.moboplayer.presentation.theme.LightWhite
 import com.digimoplus.moboplayer.presentation.theme.White
 import com.digimoplus.moboplayer.util.ModifyState
-import com.digimoplus.moboplayer.util.MusicState
 import com.digimoplus.moboplayer.util.UiState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
@@ -65,34 +74,15 @@ fun HomeRoute() {
     // handle back press
     HandleBackPress(viewModel, coroutineScope, scaffoldState)
 
-    HomeScreen(
-        viewModel = viewModel,
-        scaffoldState = scaffoldState,
-        coroutineScope = coroutineScope,
-        pagerState = pageState,
-    )
-}
-
-
-// screen content
-@Composable
-private fun HomeScreen(
-    viewModel: HomeViewModel,
-    scaffoldState: BottomSheetScaffoldState,
-    coroutineScope: CoroutineScope,
-    pagerState: PagerState,
-) {
-
     // main screen
     BottomSheetScaffold(
         modifier = Modifier.fillMaxSize(),
         sheetContent = {
-            if (viewModel.uiState == UiState.Success)
-                BottomSheetView(
-                    viewModel = viewModel,
-                    scaffoldState = scaffoldState,
-                    pagerState = pagerState
-                )
+            if (viewModel.uiState == UiState.Success) BottomSheetView(
+                viewModel,
+                scaffoldState,
+                pageState
+            )
         },
         drawerContent = { DrawerContent() },
         scaffoldState = scaffoldState,
@@ -103,6 +93,7 @@ private fun HomeScreen(
         sheetElevation = 0.dp,
     ) { innerPadding ->
 
+
         when (viewModel.uiState) {
             UiState.Loading -> {
                 LogoView()
@@ -111,75 +102,13 @@ private fun HomeScreen(
             UiState.Success -> {
 
                 // update ui
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(innerPadding),
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-
-                        // Header
-                        HeaderContent(
-                            currentMusic = viewModel.currentMusicUi,
-                            musicUiState = viewModel.musicUIState,
-                            currentFraction = viewModel.currentFraction,
-                            coroutineScope = coroutineScope,
-                            scaffoldState = scaffoldState,
-                        )
-
-                        // Content
-                        if (scaffoldState.bottomSheetState.isCollapsed) {
-
-                            DetailContent(
-                                currentFraction = viewModel.currentFraction,
-                                percentageState = viewModel.percentage,
-                                durationState = viewModel.duration,
-                                currentMusic = viewModel.currentMusicUi,
-                                isPlayIng = viewModel.musicUIState == MusicState.Play,
-                                playListState = viewModel.playListState,
-                                playLists = viewModel.playLists,
-                                currentPlayListIndex = viewModel.currentPlayListIndex,
-                                onUpSeekBar = viewModel::onUpSeekBar,
-                                onDownSeekBar = viewModel::onDownSeekBar,
-                                updatePercentage = { viewModel.updatePercentage(it) },
-                                onPlayPauseClick = viewModel::playOrPauseMusic,
-                                onNext = viewModel::onNext,
-                                onPrevious = viewModel::onPrevious,
-                                onPlayListChange = { viewModel.onPlayListChange(it) },
-                                onPlayListStateChange = { viewModel.onPlayListStateChange(it) }
-                            )
-
-                        } else {
-
-                            PlayListsContent(
-                                playLists = viewModel.playLists,
-                                currentPlayListIndex = viewModel.currentPlayListIndex,
-                                modifyState = viewModel.modifyState,
-                                pagerState = pagerState,
-                                sortState = viewModel.sortState,
-                                musicUiState = viewModel.musicUIState,
-                                currentMusic = viewModel.currentMusicUi,
-                                onSortClick = viewModel::onSortChange,
-                                onItemClick = { playListIndex, musicIndex ->
-                                    viewModel.onItemClick(playListIndex, musicIndex)
-                                },
-                                onMusicCheckedChange = { playListIndex, musicIndex ->
-                                    viewModel.onMusicCheckedChange(playListIndex, musicIndex)
-                                },
-                                onOpenDialog = { playListIndex ->
-                                    viewModel.onOpenDialog(playListIndex)
-                                },
-                                onEditPlayListClick = { playListIndex ->
-                                    viewModel.onEditPlayListClick(playListIndex)
-                                }
-                            )
-                        }
-
-                    }
-                }
+                Content(
+                    innerPadding = innerPadding,
+                    viewModel = viewModel,
+                    scaffoldState = scaffoldState,
+                    coroutineScope = coroutineScope,
+                    pagerState = pageState,
+                )
 
                 CustomAlertDialog(
                     openDialog = viewModel.openRemoveDialog,
@@ -192,9 +121,48 @@ private fun HomeScreen(
                 // error
             }
         }
+    }
 
+}
+
+// screen content
+@Composable
+private fun Content(
+    viewModel: HomeViewModel,
+    innerPadding: PaddingValues,
+    scaffoldState: BottomSheetScaffoldState,
+    coroutineScope: CoroutineScope,
+    pagerState: PagerState,
+) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(innerPadding),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+
+            // Header
+            HeaderContent(
+                viewModel = viewModel,
+                scaffoldState = scaffoldState,
+                coroutineScope = coroutineScope,
+            )
+
+            // Content
+            if (scaffoldState.bottomSheetState.isCollapsed) {
+                DetailContent(viewModel = viewModel)
+            } else {
+                PlayListsContent(viewModel = viewModel, pagerState = pagerState)
+            }
+
+        }
     }
 }
+
 
 // launch storage permission request
 @Composable

@@ -13,61 +13,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.digimoplus.moboplayer.domain.models.Music
-import com.digimoplus.moboplayer.domain.models.PlayListItem
 import com.digimoplus.moboplayer.presentation.componnets.CircleSeekBar
 import com.digimoplus.moboplayer.presentation.componnets.ControllerButtons
 import com.digimoplus.moboplayer.presentation.componnets.MultiStyleText
 import com.digimoplus.moboplayer.presentation.theme.DarkGray
 import com.digimoplus.moboplayer.presentation.theme.LightGray
-import com.digimoplus.moboplayer.util.PlayListState
+import com.digimoplus.moboplayer.util.MusicState
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun DetailContent(
-    currentFraction: Float,
-    percentageState: Float,
-    durationState: String,
-    currentMusic: Music,
-    isPlayIng: Boolean,
-    playListState: PlayListState,
-    playLists: List<PlayListItem>,
-    currentPlayListIndex: Int,
-    onUpSeekBar: () -> Unit,
-    onDownSeekBar: () -> Unit,
-    updatePercentage: (Float) -> Unit,
-    onPlayPauseClick: () -> Unit,
-    onNext: () -> Unit,
-    onPrevious: () -> Unit,
-    onPlayListChange: (index: Int) -> Unit,
-    onPlayListStateChange: (PlayListState) -> Unit,
-) {
+fun DetailContent(viewModel: HomeViewModel) {
 
     Box(modifier = Modifier.fillMaxWidth()) {
 
         // circle seekbar
-        CircleSeekBarContent(
-            anim = currentFraction,
-            percentageState = percentageState,
-            onUpSeekBar = onUpSeekBar,
-            onDownSeekBar = onDownSeekBar,
-            updatePercentage = updatePercentage,
-        )
+        CircleSeekBarContent(viewModel.currentFraction, viewModel)
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .alpha(currentFraction) // set alpha anim
+                .alpha(viewModel.currentFraction) // set alpha anim
                 .padding(top = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.padding(top = 0.dp))
 
             // music duration text
-            MultiStyleTextContent(
-                duration = durationState,
-                currentMusic = currentMusic,
-            )
+            MultiStyleTextContent(viewModel)
 
             Spacer(modifier = Modifier.padding(top = 38.dp))
 
@@ -76,7 +48,7 @@ fun DetailContent(
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .fillMaxWidth(),
-                text = currentMusic.title,
+                text = viewModel.currentMusicUi.title,
                 color = DarkGray,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
@@ -92,7 +64,7 @@ fun DetailContent(
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .fillMaxWidth(),
-                text = currentMusic.artist,
+                text = viewModel.currentMusicUi.artist,
                 color = LightGray,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.caption,
@@ -103,43 +75,37 @@ fun DetailContent(
     }
     // controller buttons
     ControllerButtons(
-        isPlayIng = isPlayIng,
-        alpha = currentFraction, // set alpha anim
-        playListState = playListState,
-        onPlayPauseClick = onPlayPauseClick,
-        onNext = onNext,
-        onPrevious = onPrevious,
-        onPlayListStateChange = onPlayListStateChange,
-        playList = playLists,
-        currentPlayListIndex = currentPlayListIndex,
-        onPlayListChange = onPlayListChange,
+        isPlayIng = viewModel.musicUIState == MusicState.Play,
+        alpha = viewModel.currentFraction, // set alpha anim
+        playListState = viewModel.playListState,
+        onPlayPauseClick = viewModel::playOrPauseMusic,
+        onNext = viewModel::onNext,
+        onPrevious = viewModel::onPrevious,
+        onPlayListStateChange = { viewModel.onPlayListStateChange(it) },
+        playList = viewModel.playLists,
+        currentPlayListIndex = viewModel.currentPlayListIndex,
+        onPlayListChange = { viewModel.onPlayListChange(it) }
     )
 }
 
 @Composable
-private fun MultiStyleTextContent(
-    duration: String,
-    currentMusic: Music,
-) {
+private fun MultiStyleTextContent(viewModel: HomeViewModel) {
     MultiStyleText(
-        text1 = duration,
-        text2 = " ~ ${currentMusic.duration}",
+        text1 = viewModel.duration,
+        text2 = " ~ ${viewModel.currentMusicUi.duration}",
     )
 }
 
 @Composable
 private fun CircleSeekBarContent(
     anim: Float,
-    percentageState: Float,
-    onUpSeekBar: () -> Unit,
-    onDownSeekBar: () -> Unit,
-    updatePercentage: (Float) -> Unit,
+    viewModel: HomeViewModel,
 ) {
     CircleSeekBar(
         alpha = anim, // set alpha anim
-        percentageState = percentageState,
-        onUpSeekBar = onUpSeekBar,
-        onDownSeekBar = onDownSeekBar,
-        updatePercentage = updatePercentage,
+        percentageState = viewModel.percentage,
+        onUpSeekBar = viewModel::onUpSeekBar,
+        onDownSeekBar = viewModel::onDownSeekBar,
+        updatePercentage = { viewModel.updatePercentage(it) }
     )
 }

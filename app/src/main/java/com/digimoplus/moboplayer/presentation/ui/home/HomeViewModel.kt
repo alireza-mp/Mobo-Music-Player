@@ -6,7 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.digimoplus.moboplayer.data.device.player.MusicPlayer
@@ -18,7 +23,16 @@ import com.digimoplus.moboplayer.domain.models.PlayListItem
 import com.digimoplus.moboplayer.domain.useCase.GetLastDataStoreUseCase
 import com.digimoplus.moboplayer.domain.useCase.GetPlayListsUseCase
 import com.digimoplus.moboplayer.domain.useCase.ModifyPlayListUseCase
-import com.digimoplus.moboplayer.util.*
+import com.digimoplus.moboplayer.util.DataState
+import com.digimoplus.moboplayer.util.ModifyState
+import com.digimoplus.moboplayer.util.MusicState
+import com.digimoplus.moboplayer.util.PlayListState
+import com.digimoplus.moboplayer.util.Sort
+import com.digimoplus.moboplayer.util.UiState
+import com.digimoplus.moboplayer.util.convertPercentageToSecond
+import com.digimoplus.moboplayer.util.findItemById
+import com.digimoplus.moboplayer.util.sortMusics
+import com.digimoplus.moboplayer.util.startMediaPlayerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -290,10 +304,12 @@ constructor(
                 saveAddNewPlayList(name)
                 _playLists.lastIndex
             }
+
             ModifyState.Edit -> {
                 saveEditedPlayList(name)
                 modifyingPlayListIndex
             }
+
             else -> {
                 cancelModifying()
                 0
@@ -380,9 +396,11 @@ constructor(
                 Sort.DATE -> {
                     Sort.NAME
                 }
+
                 Sort.NAME -> {
                     Sort.Artist
                 }
+
                 Sort.Artist -> {
                     Sort.DATE
                 }
@@ -396,9 +414,11 @@ constructor(
             ModifyState.Add -> {
                 onCancelAddNew()
             }
+
             ModifyState.Edit -> {
                 onCancelEdit()
             }
+
             else -> {}
         }
     }
